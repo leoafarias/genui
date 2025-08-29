@@ -1,7 +1,8 @@
 import { v4 as uuidv4 } from 'uuid';
 import { ai, z } from './genkit';
 import { startSessionRequestSchema } from './schemas';
-import { sessionCache } from './cache';
+import { setSessionCache } from './cache';
+import { logger } from './logger';
 
 export const startSessionFlow = ai.defineFlow(
   {
@@ -10,9 +11,11 @@ export const startSessionFlow = ai.defineFlow(
     outputSchema: z.string(),
   },
   async (request) => {
+    logger.info('Starting new session...');
     const sessionId = uuidv4();
-    console.log(`Starting session ${sessionId}`);
-    sessionCache.set(sessionId, request.catalog);
+    logger.debug(`Generated session ID: ${sessionId}`);
+    await setSessionCache(sessionId, request.catalog);
+    logger.info(`Successfully started session ${sessionId}`);
     return sessionId;
   }
 );
