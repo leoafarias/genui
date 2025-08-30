@@ -64,7 +64,11 @@ const imagePartSchema = z
 
 const uiPartSchema = z.object({
   type: z.literal("ui"),
-  definition: z.record(z.unknown()),
+  definition: z.object({
+    surfaceId: z.string(),
+    root: z.string(),
+    widgets: z.array(z.record(z.unknown())),
+  }),
 });
 
 const partSchema = z.union([textPartSchema, imagePartSchema, uiPartSchema]);
