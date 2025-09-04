@@ -1,7 +1,6 @@
 import { ai, z } from "./genkit";
 import { generateUiRequestSchema, Part as ClientPart } from "./schemas";
 import { googleAI } from "@genkit-ai/googleai";
-import { cacheService, CacheFlowContext } from "./cache";
 import { logger } from "./logger";
 import { Message, Part } from "@genkit-ai/ai";
 
@@ -12,8 +11,9 @@ const widgetSchema = z.object({
 
 const uiDefinitionSchema = z.object({
   root: z.string().describe("The ID of the root widget in the UI tree."),
-  widgets:
-    z.array(widgetSchema).describe("A list of all the widget definitions for this UI surface."),
+  widgets: z
+    .array(widgetSchema)
+    .describe("A list of all the widget definitions for this UI surface."),
 });
 
 const addOrUpdateSurfaceTool = ai.defineTool(
@@ -24,7 +24,7 @@ const addOrUpdateSurfaceTool = ai.defineTool(
     inputSchema: z.object({
       surfaceId: z.string().describe("The unique ID for the UI surface."),
       definition: uiDefinitionSchema.describe(
-        "A JSON object that defines the UI surface."
+        "A JSON object that defines the UI surface.",
       ),
     }),
     outputSchema: z.object({ status: z.string() }),
@@ -32,7 +32,7 @@ const addOrUpdateSurfaceTool = ai.defineTool(
   async (args: object) => {
     logger.debug(`Received tool call with arguments:\n${JSON.stringify(args)}`);
     return { status: "updated" };
-  }
+  },
 );
 
 const deleteSurfaceTool = ai.defineTool(
@@ -44,7 +44,7 @@ const deleteSurfaceTool = ai.defineTool(
     }),
     outputSchema: z.object({ status: z.string() }),
   },
-  async () => ({ status: "deleted" })
+  async () => ({ status: "deleted" }),
 );
 
 export const generateUiFlow = ai.defineFlow(
@@ -54,15 +54,12 @@ export const generateUiFlow = ai.defineFlow(
     outputSchema: z.unknown(),
   },
   async (request, streamingCallback) => {
-    const resolvedCache =
-      (streamingCallback.context as CacheFlowContext)?.cache || cacheService;
-
-    const catalog = await resolvedCache.getSessionCache(request.sessionId);
+    const catalog = request.catalog;
     if (!catalog) {
-      logger.error(`Invalid session ID: ${request.sessionId}`);
-      throw new Error("Invalid session ID");
+      logger.error(`No catalog provided in the request.`);
+      throw new Error("No catalog provided in the request.");
     }
-    logger.debug("Successfully retrieved catalog from cache.");
+    logger.debug("Successfully retrieved catalog from request.");
 
     // Convert the dynamic catalog (which is a JSON schema) to a string.
     const catalogSchemaString = JSON.stringify(catalog, null, 2);
@@ -75,9 +72,9 @@ You are an expert UI generation agent. Your goal is to generate a UI based on th
 When the user interacts with the UI, you will receive a message containing a JSON block with an array of UI events. You should use the data from these events, especially the 'value' of the action event, to understand the current state of the UI and decide on the next step.
 
 When you use the 'addOrUpdateSurface' tool, the 'definition' parameter you provide MUST be a JSON object that strictly conforms to the following JSON Schema:
-\班牙json
+\`\`\`json
 ${catalogSchemaString}
-\班牙json
+\`\`\`
 
 After you have successfully called the 'addOrUpdateSurface' tool and have received a 'toolResponse' with a status of 'updated', you should consider the user's request fulfilled. Respond with a short confirmation message to the user and then stop. Do not call the tool again unless the user asks for further changes.
 `.trim();
@@ -86,10 +83,10 @@ After you have successfully called the 'addOrUpdateSurface' tool and have receiv
     const genkitConversation: Message[] = request.conversation.map(
       (message) => {
         const uiEventParts = message.parts.filter(
-          (part) => part.type === "uiEvent"
+          (part) => part.type === "uiEvent",
         );
         const otherParts = message.parts.filter(
-          (part) => part.type !== "uiEvent"
+          (part) => part.type !== "uiEvent",
         );
 
         const content: Part[] = otherParts
@@ -99,7 +96,7 @@ After you have successfully called the 'addOrUpdateSurface' tool and have receiv
             }
             if (part.type === "image") {
               if (part.url) {
-                const mediaPart: { 
+                const mediaPart: {
                   media: { url: string; contentType?: string };
                 } = {
                   media: { url: part.url },
@@ -129,17 +126,14 @@ After you have successfully called the 'addOrUpdateSurface' tool and have receiv
 
         if (uiEventParts.length > 0) {
           const events = uiEventParts.map(
-            (part) => (part as any).event
+            (part) => (part as Record<string, unknown>).event,
           );
+
           content.push({
             text: `The user interacted with the UI, resulting in the following events. The 'value' field of the event that triggered this interaction contains the state of all widgets on the surface at the time of the event.
 
 
-${JSON.stringify(
-              events,
-              null,
-              2
-            )}
+${JSON.stringify(events, null, 2)}
 
 `,
           });
@@ -149,13 +143,13 @@ ${JSON.stringify(
           role: message.role,
           content,
         });
-      }
+      },
     );
 
     try {
       logger.debug(
         genkitConversation,
-        "Starting AI generation for conversation"
+        "Starting AI generation for conversation",
       );
       const { stream, response } = ai.generateStream({
         model: googleAI.model("gemini-2.5-pro"),
@@ -187,5 +181,5 @@ ${JSON.stringify(
       logger.error(error, "An error occurred during AI generation");
       throw error;
     }
-  }
+  },
 );

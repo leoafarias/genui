@@ -1,7 +1,7 @@
 import { z } from "./genkit";
 
 // A schema for a JSON schema. It's recursive.
-const jsonSchema: z.ZodType = z.lazy(() =>
+export const jsonSchema: z.ZodType = z.lazy(() =>
   z
     .object({
       description: z.string().optional(),
@@ -16,13 +16,8 @@ const jsonSchema: z.ZodType = z.lazy(() =>
         .array(z.union([z.string(), z.number(), z.boolean(), z.null()]))
         .optional(),
     })
-    .catchall(z.any())
+    .catchall(z.any()),
 );
-
-export const startSessionRequestSchema = z.object({
-  protocolVersion: z.string(),
-  catalog: jsonSchema,
-});
 
 // Schemas for conversation parts, based on the client's `MessagePart`
 const textPartSchema = z.object({
@@ -96,7 +91,7 @@ const messageSchema = z.object({
 });
 
 export const generateUiRequestSchema = z.object({
-  sessionId: z.string(),
+  catalog: jsonSchema,
   conversation: z.array(messageSchema),
 });
 

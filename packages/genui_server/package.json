@@ -31,13 +31,13 @@
     "@genkit-ai/vertexai": "^1.18.0",
     "cors": "^2.8.5",
     "express": "^4.21.2",
-    "firebase-admin": "^13.5.0",
     "genkit": "^1.18.0",
     "html-entities": "^2.6.0",
     "node": "^20.19.4",
     "node-fetch": "^3.3.2",
     "opentelemetry": "^0.1.0",
-    "pino": "^9.9.2"
+    "pino": "^9.9.2",
+    "prettier": "^3.6.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.34.0",

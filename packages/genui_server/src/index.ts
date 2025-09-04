@@ -4,8 +4,7 @@
 
 import { startFlowServer } from "@genkit-ai/express";
 import { generateUiFlow } from "./generate";
-import { startSessionFlow } from "./session";
 
 startFlowServer({
-  flows: [generateUiFlow, startSessionFlow],
+  flows: [generateUiFlow],
 });
