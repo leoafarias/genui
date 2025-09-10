@@ -9,9 +9,9 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('WidgetCatalogRegistry', () {
-    final WidgetDefinition testDefinition = WidgetDefinition.fromMap(<String, Object?>{
-      'properties': <String, Object?>{},
-    });
+    final WidgetDefinition testDefinition = WidgetDefinition.fromMap(
+      <String, Object?>{'properties': <String, Object?>{}},
+    );
 
     test('registering and retrieving a builder', () {
       final WidgetCatalogRegistry registry = WidgetCatalogRegistry();
@@ -30,14 +30,18 @@ void main() {
         ),
       );
 
-      final CatalogWidgetBuilder? retrievedBuilder = registry.getBuilder('TestWidget');
+      final CatalogWidgetBuilder? retrievedBuilder = registry.getBuilder(
+        'TestWidget',
+      );
       expect(retrievedBuilder, isNotNull);
       expect(retrievedBuilder, equals(testBuilder));
     });
 
     test('retrieving a non-existent builder returns null', () {
       final WidgetCatalogRegistry registry = WidgetCatalogRegistry();
-      final CatalogWidgetBuilder? retrievedBuilder = registry.getBuilder('NonExistentWidget');
+      final CatalogWidgetBuilder? retrievedBuilder = registry.getBuilder(
+        'NonExistentWidget',
+      );
       expect(retrievedBuilder, isNull);
     });
 
@@ -63,7 +67,9 @@ void main() {
           definition: testDefinition,
         ),
       );
-      final CatalogWidgetBuilder? retrievedBuilder1 = registry.getBuilder('TestWidget');
+      final CatalogWidgetBuilder? retrievedBuilder1 = registry.getBuilder(
+        'TestWidget',
+      );
       expect(retrievedBuilder1, equals(builder1));
 
       registry.register(
@@ -73,7 +79,9 @@ void main() {
           definition: testDefinition,
         ),
       );
-      final CatalogWidgetBuilder? retrievedBuilder2 = registry.getBuilder('TestWidget');
+      final CatalogWidgetBuilder? retrievedBuilder2 = registry.getBuilder(
+        'TestWidget',
+      );
       expect(retrievedBuilder2, equals(builder2));
     });
 

@@ -1,0 +1,1492 @@
+
+> genui_server@1.0.0 genkit:dev /Users/gspencer/code/genui/packages/genui_server
+> LOG_LEVEL=debug genkit start -- tsx src/index.ts
+
+Telemetry API running on http://localhost:4033
+Project root: /Users/gspencer/code/genui/packages/genui_server
+Genkit Developer UI: http://localhost:4000
+Recursive reference detected at #/properties/catalog/properties/properties/additionalProperties/anyOf/0! Defaulting to any
+Recursive reference detected at #/properties/catalog/properties/items/anyOf/0! Defaulting to any
+Recursive reference detected at #/properties/catalog/properties/anyOf/items/anyOf/0! Defaulting to any
+Recursive reference detected at #/properties/catalog/properties/allOf/items/anyOf/0! Defaulting to any
+Recursive reference detected at #/properties/catalog/properties/oneOf/items/anyOf/0! Defaulting to any
+strict mode: use allowUnionTypes to allow union type keyword at "#/properties/catalog/properties/enum/items" (strictTypes)
+[15:10:04.956] [32mINFO[39m (66244): [36mReceived startSession request. Body: {
+"protocolVersion": "0.1.0",
+"catalog": {
+"type": "object",
+"description": "The definition of a UI surface to be rendered.",
+"properties": {
+"root": {
+"type": "string",
+"description": "The ID of the root widget in the UI tree. This widget and its children will be rendered on the surface."
+},
+"widgets": {
+"type": "array",
+"description": "A list of all the widget definitions for this UI surface.",
+"items": {
+"type": "object",
+"description": "Represents a *single* widget in a UI widget tree. This widget could be one of many supported types.",
+"properties": {
+"id": {
+"type": "string"
+},
+"widget": {
+"description": "A wrapper object for a single widget definition. It MUST contain exactly one key, where the key is the name of a widget type (e.g., \"Column\", \"Text\", \"ElevatedButton\") from the list of allowed properties. The value is an object containing the definition of that widget using its properties. For example: `{\"TypeOfWidget\": {\"widget_property\": \"Value of property\"}}`",
+"anyOf": [
+{
+"type": "object",
+"properties": {
+"ElevatedButton": {
+"type": "object",
+"properties": {
+"child": {
+"type": "string",
+"description": "The ID of a child widget. This should always be set, e.g. to the ID of a `Text` widget."
+}
+},
+"required": [
+"child"
+]
+}
+},
+"required": [
+"ElevatedButton"
+]
+},
+{
+"type": "object",
+"properties": {
+"Column": {
+"type": "object",
+"properties": {
+"mainAxisAlignment": {
+"type": "string",
+"description": "How children are aligned on the main axis. See Flutter's MainAxisAlignment for values.",
+"enum": [
+"start",
+"center",
+"end",
+"spaceBetween",
+"spaceAround",
+"spaceEvenly"
+]
+},
+"crossAxisAlignment": {
+"type": "string",
+"description": "How children are aligned on the cross axis. See Flutter's CrossAxisAlignment for values.",
+"enum": [
+"start",
+"center",
+"end",
+"stretch",
+"baseline"
+]
+},
+"children": {
+"type": "array",
+"description": "A list of widget IDs for the children.",
+"items": {
+"type": "string"
+}
+},
+"spacing": {
+"type": "number",
+"description": "The spacing between children. Defaults to 8.0."
+}
+}
+}
+},
+"required": [
+"Column"
+]
+},
+{
+"type": "object",
+"properties": {
+"Text": {
+"type": "object",
+"properties": {
+"text": {
+"type": "string",
+"description": "The text to display. This does *not* support markdown."
+}
+},
+"required": [
+"text"
+]
+}
+},
+"required": [
+"Text"
+]
+},
+{
+"type": "object",
+"properties": {
+"CheckboxGroup": {
+"type": "object",
+"properties": {
+"values": {
+"type": "array",
+"description": "The values of the checkboxes.",
+"items": {
+"type": "boolean"
+}
+},
+"labels": {
+"type": "array",
+"description": "A list of labels for the checkboxes.",
+"items": {
+"type": "string"
+}
+}
+},
+"required": [
+"values",
+"labels"
+]
+}
+},
+"required": [
+"CheckboxGroup"
+]
+},
+{
+"type": "object",
+"properties": {
+"RadioGroup": {
+"type": "object",
+"properties": {
+"groupValue": {
+"type": "string",
+"description": "The currently selected value for a group of radio buttons."
+},
+"labels": {
+"type": "array",
+"description": "A list of labels for the radio buttons.",
+"items": {
+"type": "string"
+}
+}
+},
+"required": [
+"groupValue",
+"labels"
+]
+}
+},
+"required": [
+"RadioGroup"
+]
+},
+{
+"type": "object",
+"properties": {
+"TextField": {
+"type": "object",
+"properties": {
+"value": {
+"type": "string",
+"description": "The initial value of the text field."
+},
+"hintText": {
+"type": "string",
+"description": "Hint text for the text field."
+},
+"obscureText": {
+"type": "boolean",
+"description": "Whether the text should be obscured."
+}
+}
+}
+},
+"required": [
+"TextField"
+]
+},
+{
+"type": "object",
+"properties": {
+"Image": {
+"type": "object",
+"properties": {
+"url": {
+"type": "string",
+"description": "The URL of the image to display. Only one of url or assetName may be specified."
+},
+"assetName": {
+"type": "string",
+"description": "The name of the asset to display. Only one of assetName or url may be specified."
+},
+"fit": {
+"type": "string",
+"description": "How the image should be inscribed into the box.",
+"enum": [
+"fill",
+"contain",
+"cover",
+"fitWidth",
+"fitHeight",
+"none",
+"scaleDown"
+]
+}
+}
+}
+},
+"required": [
+"Image"
+]
+}
+]
+}
+},
+"required": [
+"id",
+"widget"
+]
+}
+}
+}
+}
+}[39m
+[15:10:04.956] [32mINFO[39m (66244): [36mStarting new session...[39m
+[15:10:04.957] [34mDEBUG[39m (66244): [36mGenerated session ID: b9146458-439e-455f-8cda-d15207789477[39m
+[15:10:04.957] [34mDEBUG[39m (66244): [36mStoring catalog in Firestore for session ID: b9146458-439e-455f-8cda-d15207789477[39m
+[15:10:05.998] [32mINFO[39m (66244): [36mSuccessfully started session b9146458-439e-455f-8cda-d15207789477[39m
+[15:26:06.514] [34mDEBUG[39m (66244): [36mRetrieving catalog from Firestore for session ID: b9146458-439e-455f-8cda-d15207789477[39m
+[15:26:06.702] [34mDEBUG[39m (66244): [36mSuccessfully retrieved catalog from cache.[39m
+[15:26:06.702] [34mDEBUG[39m (66244): [36mStarting AI generation for conversation[39m
+[35m0[39m: {
+"role": "user",
+"content": [
+{
+"text": "Make an address entry form"
+}
+]
+}
+[15:26:11.961] [34mDEBUG[39m (66244): [36mChunk from AI[39m
+[35mchunk[39m: {
+"role": "model",
+"index": 0,
+"content": [
+{
+"toolRequest": {
+"name": "addOrUpdateSurface",
+"input": {
+"definition": {
+"widgets": [
+{
+"widget": {
+"Column": {
+"children": [
+"street_address_field",
+"city_field",
+"state_field",
+"zip_code_field",
+"country_field",
+"submit_button"
+]
+}
+},
+"id": "address_form"
+},
+{
+"widget": {
+"TextField": {
+"hintText": "Street Address"
+}
+},
+"id": "street_address_field"
+},
+{
+"widget": {
+"TextField": {
+"hintText": "City"
+}
+},
+"id": "city_field"
+},
+{
+"id": "state_field",
+"widget": {
+"TextField": {
+"hintText": "State"
+}
+}
+},
+{
+"id": "zip_code_field",
+"widget": {
+"TextField": {
+"hintText": "ZIP Code"
+}
+}
+},
+{
+"widget": {
+"TextField": {
+"hintText": "Country"
+}
+},
+"id": "country_field"
+},
+{
+"id": "submit_button",
+"widget": {
+"ElevatedButton": {
+"child": "submit_button_text"
+}
+}
+},
+{
+"id": "submit_button_text",
+"widget": {
+"Text": {
+"text": "Submit"
+}
+}
+}
+],
+"root": "address_form"
+},
+"surfaceId": "address_form"
+},
+"ref": "0"
+}
+}
+]
+}
+[15:26:11.961] [32mINFO[39m (66244): [36mYielding tool request from AI.[39m
+[15:26:12.015] [34mDEBUG[39m (66244): [36mReceived tool call with arguments:
+{"definition":{"widgets":[{"widget":{"Column":{"children":["street_address_field","city_field","state_field","zip_code_field","country_field","submit_button"]}},"id":"address_form"},{"widget":{"TextField":{"hintText":"Street Address"}},"id":"street_address_field"},{"widget":{"TextField":{"hintText":"City"}},"id":"city_field"},{"id":"state_field","widget":{"TextField":{"hintText":"State"}}},{"id":"zip_code_field","widget":{"TextField":{"hintText":"ZIP Code"}}},{"widget":{"TextField":{"hintText":"Country"}},"id":"country_field"},{"id":"submit_button","widget":{"ElevatedButton":{"child":"submit_button_text"}}},{"id":"submit_button_text","widget":{"Text":{"text":"Submit"}}}],"root":"address_form"},"surfaceId":"address_form"}[39m
+[15:26:12.018] [34mDEBUG[39m (66244): [36mChunk from AI[39m
+[35mchunk[39m: {
+"role": "tool",
+"index": 1,
+"content": [
+{
+"toolResponse": {
+"name": "addOrUpdateSurface",
+"ref": "0",
+"output": {
+"status": "updated"
+}
+}
+}
+]
+}
+[15:26:12.018] [32mINFO[39m (66244): [36mYielding tool request from AI.[39m
+[15:26:13.870] [34mDEBUG[39m (66244): [36mChunk from AI[39m
+[35mchunk[39m: {
+"role": "model",
+"index": 2,
+"content": [
+{
+"text": "I have created an address entry form for you."
+}
+]
+}
+[15:26:13.870] [32mINFO[39m (66244): [36mYielding tool request from AI.[39m
+[15:26:13.874] [32mINFO[39m (66244): [36mYielding final text response from AI.[39m
+[15:26:20.923] [34mDEBUG[39m (66244): [36mRetrieving catalog from Firestore for session ID: b9146458-439e-455f-8cda-d15207789477[39m
+[15:26:21.044] [34mDEBUG[39m (66244): [36mSuccessfully retrieved catalog from cache.[39m
+[15:26:21.044] [34mDEBUG[39m (66244): [36mStarting AI generation for conversation[39m
+[35m0[39m: {
+"role": "user",
+"content": [
+{
+"text": "Make an address entry form"
+}
+]
+}
+[35m1[39m: {
+"role": "model",
+"content": [
+{
+"toolRequest": {
+"name": "addOrUpdateSurface",
+"input": {
+"surfaceId": "address_form",
+"widgets": [
+{
+"widget": {
+"Column": {
+"children": [
+"street_address_field",
+"city_field",
+"state_field",
+"zip_code_field",
+"country_field",
+"submit_button"
+]
+}
+},
+"id": "address_form"
+},
+{
+"widget": {
+"TextField": {
+"hintText": "Street Address"
+}
+},
+"id": "street_address_field"
+},
+{
+"widget": {
+"TextField": {
+"hintText": "City"
+}
+},
+"id": "city_field"
+},
+{
+"id": "state_field",
+"widget": {
+"TextField": {
+"hintText": "State"
+}
+}
+},
+{
+"id": "zip_code_field",
+"widget": {
+"TextField": {
+"hintText": "ZIP Code"
+}
+}
+},
+{
+"widget": {
+"TextField": {
+"hintText": "Country"
+}
+},
+"id": "country_field"
+},
+{
+"id": "submit_button",
+"widget": {
+"ElevatedButton": {
+"child": "submit_button_text"
+}
+}
+},
+{
+"id": "submit_button_text",
+"widget": {
+"Text": {
+"text": "Submit"
+}
+}
+}
+],
+"root": "address_form"
+}
+}
+}
+]
+}
+[35m2[39m: {
+"role": "model",
+"content": [
+{
+"text": "I have created an address entry form for you."
+}
+]
+}
+[35m3[39m: {
+"role": "user",
+"content": [
+{
+"text": "Make a login form"
+}
+]
+}
+[15:26:26.704] [34mDEBUG[39m (66244): [36mChunk from AI[39m
+[35mchunk[39m: {
+"role": "model",
+"index": 0,
+"content": [
+{
+"toolRequest": {
+"name": "addOrUpdateSurface",
+"input": {
+"surfaceId": "login_form",
+"definition": {
+"widgets": [
+{
+"widget": {
+"Column": {
+"children": [
+"username_field",
+"password_field",
+"login_button"
+]
+}
+},
+"id": "login_form"
+},
+{
+"widget": {
+"TextField": {
+"hintText": "Username"
+}
+},
+"id": "username_field"
+},
+{
+"id": "password_field",
+"widget": {
+"TextField": {
+"hintText": "Password",
+"obscureText": true
+}
+}
+},
+{
+"id": "login_button",
+"widget": {
+"ElevatedButton": {
+"child": "login_button_text"
+}
+}
+},
+{
+"widget": {
+"Text": {
+"text": "Login"
+}
+},
+"id": "login_button_text"
+}
+],
+"root": "login_form"
+}
+},
+"ref": "0"
+}
+}
+]
+}
+[15:26:26.704] [32mINFO[39m (66244): [36mYielding tool request from AI.[39m
+[15:26:26.727] [34mDEBUG[39m (66244): [36mChunk from AI[39m
+[35mchunk[39m: {
+"role": "model",
+"index": 0,
+"content": [
+{
+"text": "OK, I've created a login form."
+}
+]
+}
+[15:26:26.727] [32mINFO[39m (66244): [36mYielding tool request from AI.[39m
+[15:26:26.736] [34mDEBUG[39m (66244): [36mReceived tool call with arguments:
+{"surfaceId":"login_form","definition":{"widgets":[{"widget":{"Column":{"children":["username_field","password_field","login_button"]}},"id":"login_form"},{"widget":{"TextField":{"hintText":"Username"}},"id":"username_field"},{"id":"password_field","widget":{"TextField":{"hintText":"Password","obscureText":true}}},{"id":"login_button","widget":{"ElevatedButton":{"child":"login_button_text"}}},{"widget":{"Text":{"text":"Login"}},"id":"login_button_text"}],"root":"login_form"}}[39m
+[15:26:26.737] [34mDEBUG[39m (66244): [36mChunk from AI[39m
+[35mchunk[39m: {
+"role": "tool",
+"index": 1,
+"content": [
+{
+"toolResponse": {
+"name": "addOrUpdateSurface",
+"ref": "0",
+"output": {
+"status": "updated"
+}
+}
+}
+]
+}
+[15:26:26.737] [32mINFO[39m (66244): [36mYielding tool request from AI.[39m
+[15:26:29.085] [34mDEBUG[39m (66244): [36mChunk from AI[39m
+[35mchunk[39m: {
+"role": "model",
+"index": 2,
+"content": [
+{
+"text": "I've created a login form for you."
+}
+]
+}
+[15:26:29.085] [32mINFO[39m (66244): [36mYielding tool request from AI.[39m
+[15:26:29.088] [32mINFO[39m (66244): [36mYielding final text response from AI.[39m
+[15:26:40.892] [34mDEBUG[39m (66244): [36mRetrieving catalog from Firestore for session ID: b9146458-439e-455f-8cda-d15207789477[39m
+[15:26:41.099] [34mDEBUG[39m (66244): [36mSuccessfully retrieved catalog from cache.[39m
+[15:26:41.099] [34mDEBUG[39m (66244): [36mStarting AI generation for conversation[39m
+[35m0[39m: {
+"role": "user",
+"content": [
+{
+"text": "Make an address entry form"
+}
+]
+}
+[35m1[39m: {
+"role": "model",
+"content": [
+{
+"toolRequest": {
+"name": "addOrUpdateSurface",
+"input": {
+"surfaceId": "address_form",
+"widgets": [
+{
+"widget": {
+"Column": {
+"children": [
+"street_address_field",
+"city_field",
+"state_field",
+"zip_code_field",
+"country_field",
+"submit_button"
+]
+}
+},
+"id": "address_form"
+},
+{
+"widget": {
+"TextField": {
+"hintText": "Street Address"
+}
+},
+"id": "street_address_field"
+},
+{
+"widget": {
+"TextField": {
+"hintText": "City"
+}
+},
+"id": "city_field"
+},
+{
+"id": "state_field",
+"widget": {
+"TextField": {
+"hintText": "State"
+}
+}
+},
+{
+"id": "zip_code_field",
+"widget": {
+"TextField": {
+"hintText": "ZIP Code"
+}
+}
+},
+{
+"widget": {
+"TextField": {
+"hintText": "Country"
+}
+},
+"id": "country_field"
+},
+{
+"id": "submit_button",
+"widget": {
+"ElevatedButton": {
+"child": "submit_button_text"
+}
+}
+},
+{
+"id": "submit_button_text",
+"widget": {
+"Text": {
+"text": "Submit"
+}
+}
+}
+],
+"root": "address_form"
+}
+}
+}
+]
+}
+[35m2[39m: {
+"role": "model",
+"content": [
+{
+"text": "I have created an address entry form for you."
+}
+]
+}
+[35m3[39m: {
+"role": "user",
+"content": [
+{
+"text": "Make a login form"
+}
+]
+}
+[35m4[39m: {
+"role": "model",
+"content": [
+{
+"toolRequest": {
+"name": "addOrUpdateSurface",
+"input": {
+"surfaceId": "login_form",
+"widgets": [
+{
+"widget": {
+"Column": {
+"children": [
+"username_field",
+"password_field",
+"login_button"
+]
+}
+},
+"id": "login_form"
+},
+{
+"widget": {
+"TextField": {
+"hintText": "Username"
+}
+},
+"id": "username_field"
+},
+{
+"id": "password_field",
+"widget": {
+"TextField": {
+"hintText": "Password",
+"obscureText": true
+}
+}
+},
+{
+"id": "login_button",
+"widget": {
+"ElevatedButton": {
+"child": "login_button_text"
+}
+}
+},
+{
+"widget": {
+"Text": {
+"text": "Login"
+}
+},
+"id": "login_button_text"
+}
+],
+"root": "login_form"
+}
+}
+}
+]
+}
+[35m5[39m: {
+"role": "model",
+"content": [
+{
+"text": "I've created a login form for you."
+}
+]
+}
+[35m6[39m: {
+"role": "user",
+"content": [
+{
+"text": "How about removing the country and add a name to the address form."
+}
+]
+}
+[15:26:48.839] [34mDEBUG[39m (66244): [36mChunk from AI[39m
+[35mchunk[39m: {
+"role": "model",
+"index": 0,
+"content": [
+{
+"toolRequest": {
+"name": "addOrUpdateSurface",
+"input": {
+"surfaceId": "address_form",
+"definition": {
+"root": "address_form",
+"widgets": [
+{
+"widget": {
+"Column": {
+"children": [
+"name_field",
+"street_address_field",
+"city_field",
+"state_field",
+"zip_code_field",
+"submit_button"
+]
+}
+},
+"id": "address_form"
+},
+{
+"id": "name_field",
+"widget": {
+"TextField": {
+"hintText": "Name"
+}
+}
+},
+{
+"widget": {
+"TextField": {
+"hintText": "Street Address"
+}
+},
+"id": "street_address_field"
+},
+{
+"id": "city_field",
+"widget": {
+"TextField": {
+"hintText": "City"
+}
+}
+},
+{
+"widget": {
+"TextField": {
+"hintText": "State"
+}
+},
+"id": "state_field"
+},
+{
+"widget": {
+"TextField": {
+"hintText": "ZIP Code"
+}
+},
+"id": "zip_code_field"
+},
+{
+"widget": {
+"ElevatedButton": {
+"child": "submit_button_text"
+}
+},
+"id": "submit_button"
+},
+{
+"widget": {
+"Text": {
+"text": "Submit"
+}
+},
+"id": "submit_button_text"
+}
+]
+}
+},
+"ref": "0"
+}
+}
+]
+}
+[15:26:48.839] [32mINFO[39m (66244): [36mYielding tool request from AI.[39m
+[15:26:48.870] [34mDEBUG[39m (66244): [36mChunk from AI[39m
+[35mchunk[39m: {
+"role": "model",
+"index": 0,
+"content": [
+{
+"text": "OK. I've updated the address form to remove the country field and add a name field."
+}
+]
+}
+[15:26:48.870] [32mINFO[39m (66244): [36mYielding tool request from AI.[39m
+[15:26:48.881] [34mDEBUG[39m (66244): [36mReceived tool call with arguments:
+{"surfaceId":"address_form","definition":{"root":"address_form","widgets":[{"widget":{"Column":{"children":["name_field","street_address_field","city_field","state_field","zip_code_field","submit_button"]}},"id":"address_form"},{"id":"name_field","widget":{"TextField":{"hintText":"Name"}}},{"widget":{"TextField":{"hintText":"Street Address"}},"id":"street_address_field"},{"id":"city_field","widget":{"TextField":{"hintText":"City"}}},{"widget":{"TextField":{"hintText":"State"}},"id":"state_field"},{"widget":{"TextField":{"hintText":"ZIP Code"}},"id":"zip_code_field"},{"widget":{"ElevatedButton":{"child":"submit_button_text"}},"id":"submit_button"},{"widget":{"Text":{"text":"Submit"}},"id":"submit_button_text"}]}}[39m
+[15:26:48.881] [34mDEBUG[39m (66244): [36mChunk from AI[39m
+[35mchunk[39m: {
+"role": "tool",
+"index": 1,
+"content": [
+{
+"toolResponse": {
+"name": "addOrUpdateSurface",
+"ref": "0",
+"output": {
+"status": "updated"
+}
+}
+}
+]
+}
+[15:26:48.881] [32mINFO[39m (66244): [36mYielding tool request from AI.[39m
+[15:26:53.420] [34mDEBUG[39m (66244): [36mChunk from AI[39m
+[35mchunk[39m: {
+"role": "model",
+"index": 2,
+"content": [
+{
+"text": "I've updated the address form to remove the country field and add a name field."
+}
+]
+}
+[15:26:53.420] [32mINFO[39m (66244): [36mYielding tool request from AI.[39m
+[15:26:53.423] [32mINFO[39m (66244): [36mYielding final text response from AI.[39m
+[15:27:13.626] [34mDEBUG[39m (66244): [36mRetrieving catalog from Firestore for session ID: b9146458-439e-455f-8cda-d15207789477[39m
+[15:27:13.765] [34mDEBUG[39m (66244): [36mSuccessfully retrieved catalog from cache.[39m
+[15:27:13.765] [34mDEBUG[39m (66244): [36mStarting AI generation for conversation[39m
+[35m0[39m: {
+"role": "user",
+"content": [
+{
+"text": "Make an address entry form"
+}
+]
+}
+[35m1[39m: {
+"role": "model",
+"content": [
+{
+"toolRequest": {
+"name": "addOrUpdateSurface",
+"input": {
+"surfaceId": "address_form",
+"widgets": [
+{
+"widget": {
+"Column": {
+"children": [
+"street_address_field",
+"city_field",
+"state_field",
+"zip_code_field",
+"country_field",
+"submit_button"
+]
+}
+},
+"id": "address_form"
+},
+{
+"widget": {
+"TextField": {
+"hintText": "Street Address"
+}
+},
+"id": "street_address_field"
+},
+{
+"widget": {
+"TextField": {
+"hintText": "City"
+}
+},
+"id": "city_field"
+},
+{
+"id": "state_field",
+"widget": {
+"TextField": {
+"hintText": "State"
+}
+}
+},
+{
+"id": "zip_code_field",
+"widget": {
+"TextField": {
+"hintText": "ZIP Code"
+}
+}
+},
+{
+"widget": {
+"TextField": {
+"hintText": "Country"
+}
+},
+"id": "country_field"
+},
+{
+"id": "submit_button",
+"widget": {
+"ElevatedButton": {
+"child": "submit_button_text"
+}
+}
+},
+{
+"id": "submit_button_text",
+"widget": {
+"Text": {
+"text": "Submit"
+}
+}
+}
+],
+"root": "address_form"
+}
+}
+}
+]
+}
+[35m2[39m: {
+"role": "model",
+"content": [
+{
+"text": "I have created an address entry form for you."
+}
+]
+}
+[35m3[39m: {
+"role": "user",
+"content": [
+{
+"text": "Make a login form"
+}
+]
+}
+[35m4[39m: {
+"role": "model",
+"content": [
+{
+"toolRequest": {
+"name": "addOrUpdateSurface",
+"input": {
+"surfaceId": "login_form",
+"widgets": [
+{
+"widget": {
+"Column": {
+"children": [
+"username_field",
+"password_field",
+"login_button"
+]
+}
+},
+"id": "login_form"
+},
+{
+"widget": {
+"TextField": {
+"hintText": "Username"
+}
+},
+"id": "username_field"
+},
+{
+"id": "password_field",
+"widget": {
+"TextField": {
+"hintText": "Password",
+"obscureText": true
+}
+}
+},
+{
+"id": "login_button",
+"widget": {
+"ElevatedButton": {
+"child": "login_button_text"
+}
+}
+},
+{
+"widget": {
+"Text": {
+"text": "Login"
+}
+},
+"id": "login_button_text"
+}
+],
+"root": "login_form"
+}
+}
+}
+]
+}
+[35m5[39m: {
+"role": "model",
+"content": [
+{
+"text": "I've created a login form for you."
+}
+]
+}
+[35m6[39m: {
+"role": "user",
+"content": [
+{
+"text": "How about removing the country and add a name to the address form."
+}
+]
+}
+[35m7[39m: {
+"role": "model",
+"content": [
+{
+"text": "I've updated the address form to remove the country field and add a name field."
+}
+]
+}
+[35m8[39m: {
+"role": "user",
+"content": [
+{
+"text": "The user interacted with the UI, resulting in the following events. The 'value' field of the event that triggered this interaction contains the state of all widgets on the surface at the time of the event.\n\n\n[\n  {\n    \"widgetId\": \"name_field\",\n    \"eventType\": \"onChanged\",\n    \"timestamp\": \"2025-09-04T15:27:02.308003\",\n    \"isAction\": false,\n    \"value\": \"Greg\",\n    \"surfaceId\": \"address_form\"\n  },\n  {\n    \"widgetId\": \"street_address_field\",\n    \"eventType\": \"onChanged\",\n    \"timestamp\": \"2025-09-04T15:27:07.026520\",\n    \"isAction\": false,\n    \"value\": \"1 main street\",\n    \"surfaceId\": \"address_form\"\n  },\n  {\n    \"widgetId\": \"city_field\",\n    \"eventType\": \"onChanged\",\n    \"timestamp\": \"2025-09-04T15:27:08.983090\",\n    \"isAction\": false,\n    \"value\": \"anywhere\",\n    \"surfaceId\": \"address_form\"\n  },\n  {\n    \"widgetId\": \"state_field\",\n    \"eventType\": \"onChanged\",\n    \"timestamp\": \"2025-09-04T15:27:10.305649\",\n    \"isAction\": false,\n    \"value\": \"CO\",\n    \"surfaceId\": \"address_form\"\n  },\n  {\n    \"widgetId\": \"zip_code_field\",\n    \"eventType\": \"onChanged\",\n    \"timestamp\": \"2025-09-04T15:27:12.516275\",\n    \"isAction\": false,\n    \"value\": \"80524\",\n    \"surfaceId\": \"address_form\"\n  },\n  {\n    \"widgetId\": \"submit_button\",\n    \"eventType\": \"onTap\",\n    \"timestamp\": \"2025-09-04T15:27:13.589004\",\n    \"isAction\": true,\n    \"value\": {\n      \"name_field\": \"Greg\",\n      \"street_address_field\": \"1 main street\",\n      \"city_field\": \"anywhere\",\n      \"state_field\": \"CO\",\n      \"zip_code_field\": \"80524\"\n    },\n    \"surfaceId\": \"address_form\"\n  }\n]\n\n"
+}
+]
+}
+[15:27:22.433] [34mDEBUG[39m (66244): [36mChunk from AI[39m
+[35mchunk[39m: {
+"role": "model",
+"index": 0,
+"content": [
+{
+"toolRequest": {
+"name": "addOrUpdateSurface",
+"input": {
+"definition": {
+"root": "confirmation_column",
+"widgets": [
+{
+"id": "confirmation_column",
+"widget": {
+"Column": {
+"children": [
+"confirmation_text",
+"name_text",
+"street_text",
+"city_state_zip_text"
+]
+}
+}
+},
+{
+"id": "confirmation_text",
+"widget": {
+"Text": {
+"text": "Thank you for submitting your address:"
+}
+}
+},
+{
+"id": "name_text",
+"widget": {
+"Text": {
+"text": "Greg"
+}
+}
+},
+{
+"widget": {
+"Text": {
+"text": "1 main street"
+}
+},
+"id": "street_text"
+},
+{
+"id": "city_state_zip_text",
+"widget": {
+"Text": {
+"text": "anywhere, CO 80524"
+}
+}
+}
+]
+},
+"surfaceId": "address_form"
+},
+"ref": "0"
+}
+}
+]
+}
+[15:27:22.433] [32mINFO[39m (66244): [36mYielding tool request from AI.[39m
+[15:27:22.518] [34mDEBUG[39m (66244): [36mChunk from AI[39m
+[35mchunk[39m: {
+"role": "model",
+"index": 0,
+"content": [
+{
+"text": "OK. I have received the address."
+}
+]
+}
+[15:27:22.518] [32mINFO[39m (66244): [36mYielding tool request from AI.[39m
+[15:27:22.522] [34mDEBUG[39m (66244): [36mReceived tool call with arguments:
+{"definition":{"root":"confirmation_column","widgets":[{"id":"confirmation_column","widget":{"Column":{"children":["confirmation_text","name_text","street_text","city_state_zip_text"]}}},{"id":"confirmation_text","widget":{"Text":{"text":"Thank you for submitting your address:"}}},{"id":"name_text","widget":{"Text":{"text":"Greg"}}},{"widget":{"Text":{"text":"1 main street"}},"id":"street_text"},{"id":"city_state_zip_text","widget":{"Text":{"text":"anywhere, CO 80524"}}}]},"surfaceId":"address_form"}[39m
+[15:27:22.522] [34mDEBUG[39m (66244): [36mChunk from AI[39m
+[35mchunk[39m: {
+"role": "tool",
+"index": 1,
+"content": [
+{
+"toolResponse": {
+"name": "addOrUpdateSurface",
+"ref": "0",
+"output": {
+"status": "updated"
+}
+}
+}
+]
+}
+[15:27:22.522] [32mINFO[39m (66244): [36mYielding tool request from AI.[39m
+[15:27:24.171] [34mDEBUG[39m (66244): [36mChunk from AI[39m
+[35mchunk[39m: {
+"role": "model",
+"index": 2,
+"content": [
+{
+"text": "Thanks, I have received your address."
+}
+]
+}
+[15:27:24.171] [32mINFO[39m (66244): [36mYielding tool request from AI.[39m
+[15:27:24.184] [32mINFO[39m (66244): [36mYielding final text response from AI.[39m
+[15:27:37.357] [34mDEBUG[39m (66244): [36mRetrieving catalog from Firestore for session ID: b9146458-439e-455f-8cda-d15207789477[39m
+[15:27:37.480] [34mDEBUG[39m (66244): [36mSuccessfully retrieved catalog from cache.[39m
+[15:27:37.480] [34mDEBUG[39m (66244): [36mStarting AI generation for conversation[39m
+[35m0[39m: {
+"role": "user",
+"content": [
+{
+"text": "Make an address entry form"
+}
+]
+}
+[35m1[39m: {
+"role": "model",
+"content": [
+{
+"toolRequest": {
+"name": "addOrUpdateSurface",
+"input": {
+"surfaceId": "address_form",
+"widgets": [
+{
+"widget": {
+"Column": {
+"children": [
+"street_address_field",
+"city_field",
+"state_field",
+"zip_code_field",
+"country_field",
+"submit_button"
+]
+}
+},
+"id": "address_form"
+},
+{
+"widget": {
+"TextField": {
+"hintText": "Street Address"
+}
+},
+"id": "street_address_field"
+},
+{
+"widget": {
+"TextField": {
+"hintText": "City"
+}
+},
+"id": "city_field"
+},
+{
+"id": "state_field",
+"widget": {
+"TextField": {
+"hintText": "State"
+}
+}
+},
+{
+"id": "zip_code_field",
+"widget": {
+"TextField": {
+"hintText": "ZIP Code"
+}
+}
+},
+{
+"widget": {
+"TextField": {
+"hintText": "Country"
+}
+},
+"id": "country_field"
+},
+{
+"id": "submit_button",
+"widget": {
+"ElevatedButton": {
+"child": "submit_button_text"
+}
+}
+},
+{
+"id": "submit_button_text",
+"widget": {
+"Text": {
+"text": "Submit"
+}
+}
+}
+],
+"root": "address_form"
+}
+}
+}
+]
+}
+[35m2[39m: {
+"role": "model",
+"content": [
+{
+"text": "I have created an address entry form for you."
+}
+]
+}
+[35m3[39m: {
+"role": "user",
+"content": [
+{
+"text": "Make a login form"
+}
+]
+}
+[35m4[39m: {
+"role": "model",
+"content": [
+{
+"toolRequest": {
+"name": "addOrUpdateSurface",
+"input": {
+"surfaceId": "login_form",
+"widgets": [
+{
+"widget": {
+"Column": {
+"children": [
+"username_field",
+"password_field",
+"login_button"
+]
+}
+},
+"id": "login_form"
+},
+{
+"widget": {
+"TextField": {
+"hintText": "Username"
+}
+},
+"id": "username_field"
+},
+{
+"id": "password_field",
+"widget": {
+"TextField": {
+"hintText": "Password",
+"obscureText": true
+}
+}
+},
+{
+"id": "login_button",
+"widget": {
+"ElevatedButton": {
+"child": "login_button_text"
+}
+}
+},
+{
+"widget": {
+"Text": {
+"text": "Login"
+}
+},
+"id": "login_button_text"
+}
+],
+"root": "login_form"
+}
+}
+}
+]
+}
+[35m5[39m: {
+"role": "model",
+"content": [
+{
+"text": "I've created a login form for you."
+}
+]
+}
+[35m6[39m: {
+"role": "user",
+"content": [
+{
+"text": "How about removing the country and add a name to the address form."
+}
+]
+}
+[35m7[39m: {
+"role": "model",
+"content": [
+{
+"text": "I've updated the address form to remove the country field and add a name field."
+}
+]
+}
+[35m8[39m: {
+"role": "user",
+"content": [
+{
+"text": "The user interacted with the UI, resulting in the following events. The 'value' field of the event that triggered this interaction contains the state of all widgets on the surface at the time of the event.\n\n\n[\n  {\n    \"widgetId\": \"name_field\",\n    \"eventType\": \"onChanged\",\n    \"timestamp\": \"2025-09-04T15:27:02.308003\",\n    \"isAction\": false,\n    \"value\": \"Greg\",\n    \"surfaceId\": \"address_form\"\n  },\n  {\n    \"widgetId\": \"street_address_field\",\n    \"eventType\": \"onChanged\",\n    \"timestamp\": \"2025-09-04T15:27:07.026520\",\n    \"isAction\": false,\n    \"value\": \"1 main street\",\n    \"surfaceId\": \"address_form\"\n  },\n  {\n    \"widgetId\": \"city_field\",\n    \"eventType\": \"onChanged\",\n    \"timestamp\": \"2025-09-04T15:27:08.983090\",\n    \"isAction\": false,\n    \"value\": \"anywhere\",\n    \"surfaceId\": \"address_form\"\n  },\n  {\n    \"widgetId\": \"state_field\",\n    \"eventType\": \"onChanged\",\n    \"timestamp\": \"2025-09-04T15:27:10.305649\",\n    \"isAction\": false,\n    \"value\": \"CO\",\n    \"surfaceId\": \"address_form\"\n  },\n  {\n    \"widgetId\": \"zip_code_field\",\n    \"eventType\": \"onChanged\",\n    \"timestamp\": \"2025-09-04T15:27:12.516275\",\n    \"isAction\": false,\n    \"value\": \"80524\",\n    \"surfaceId\": \"address_form\"\n  },\n  {\n    \"widgetId\": \"submit_button\",\n    \"eventType\": \"onTap\",\n    \"timestamp\": \"2025-09-04T15:27:13.589004\",\n    \"isAction\": true,\n    \"value\": {\n      \"name_field\": \"Greg\",\n      \"street_address_field\": \"1 main street\",\n      \"city_field\": \"anywhere\",\n      \"state_field\": \"CO\",\n      \"zip_code_field\": \"80524\"\n    },\n    \"surfaceId\": \"address_form\"\n  }\n]\n\n"
+}
+]
+}
+[35m9[39m: {
+"role": "model",
+"content": [
+{
+"text": "Thanks, I have received your address."
+}
+]
+}
+[35m10[39m: {
+"role": "user",
+"content": [
+{
+"text": "The user interacted with the UI, resulting in the following events. The 'value' field of the event that triggered this interaction contains the state of all widgets on the surface at the time of the event.\n\n\n[\n  {\n    \"widgetId\": \"username_field\",\n    \"eventType\": \"onChanged\",\n    \"timestamp\": \"2025-09-04T15:27:34.284475\",\n    \"isAction\": false,\n    \"value\": \"greg\",\n    \"surfaceId\": \"login_form\"\n  },\n  {\n    \"widgetId\": \"password_field\",\n    \"eventType\": \"onChanged\",\n    \"timestamp\": \"2025-09-04T15:27:36.479663\",\n    \"isAction\": false,\n    \"value\": \"pass\",\n    \"surfaceId\": \"login_form\"\n  },\n  {\n    \"widgetId\": \"login_button\",\n    \"eventType\": \"onTap\",\n    \"timestamp\": \"2025-09-04T15:27:37.354558\",\n    \"isAction\": true,\n    \"value\": {\n      \"username_field\": \"greg\",\n      \"password_field\": \"pass\"\n    },\n    \"surfaceId\": \"login_form\"\n  }\n]\n\n"
+}
+]
+}
+[15:27:41.054] [34mDEBUG[39m (66244): [36mChunk from AI[39m
+[35mchunk[39m: {
+"role": "model",
+"index": 0,
+"content": [
+{
+"text": "Thanks for logging in."
+}
+]
+}
+[15:27:41.054] [32mINFO[39m (66244): [36mYielding tool request from AI.[39m
+[15:27:41.058] [32mINFO[39m (66244): [36mYielding final text response from AI.[39m

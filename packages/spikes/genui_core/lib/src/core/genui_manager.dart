@@ -65,8 +65,8 @@ class GenUiManager {
       if (statePath != null) {
         final stateUpdate = StateUpdate.fromMap({
           'patches': [
-            {'op': 'replace', 'path': '/$statePath', 'value': value}
-          ]
+            {'op': 'replace', 'path': '/$statePath', 'value': value},
+          ],
         });
         _stateUpdateStreamController.add(stateUpdate);
       }

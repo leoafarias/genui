@@ -23,7 +23,11 @@ class FcpElevatedButton extends StatelessWidget {
     return ElevatedButton(
       onPressed: () {
         onEvent?.call(
-          EventPayload(sourceNodeId: node.id, eventName: 'onPressed'),
+          Event(
+            sourceNodeId: node.id,
+            eventName: 'onPressed',
+            timestamp: DateTime.now(),
+          ),
         );
       },
       child: child,

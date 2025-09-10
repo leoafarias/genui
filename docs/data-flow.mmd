@@ -1,0 +1,41 @@
+sequenceDiagram
+    participant AppLogic
+    participant UiEventManager
+    participant UiAgent
+    participant GenUIClient
+    participant Server
+    participant LLM
+
+    loop Conversation
+        AppLogic->>UiEventManager: add(UiEvent)
+        activate UiEventManager
+        Note right of UiEventManager: Caches UI state changes (e.g., text input).
+        Note right of UiEventManager: On an action event (e.g., button press)...
+        UiEventManager->>UiAgent: sendUiEvents(events)
+        deactivate UiEventManager
+
+        activate UiAgent
+
+        UiAgent->>GenUIClient: generateUI(catalog, conversation)
+        activate GenUIClient
+
+        GenUIClient->>+Server: POST /generateUi (catalog, conversation)
+        deactivate GenUIClient
+
+        Server->>Server: Convert UiEvent to text for LLM
+        Server->>LLM: generateStream(conversation, tools)
+
+        LLM-->>Server: toolRequest: addOrUpdateSurface(...)
+        Server-->>UiAgent: streams { "message": { "content": [{ "toolRequest": ... }]}}
+
+        Note over UiAgent, AppLogic: As UI messages arrive...
+        UiAgent->>AppLogic: addOrUpdateSurface(definition)
+
+        LLM-->>Server: Final text response
+        Server-->>-UiAgent: streams { "result": { "message": ... }}
+
+        Note over UiAgent, AppLogic: As text messages arrive...
+        UiAgent->>UiAgent: Add message to conversation history
+
+        deactivate UiAgent
+    end

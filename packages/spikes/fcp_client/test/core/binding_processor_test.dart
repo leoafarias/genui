@@ -39,42 +39,48 @@ void main() {
     });
 
     test('resolves simple path binding', () {
-      final Binding binding = Binding.fromMap(<String, Object?>{'path': 'user.name'});
       final Map<String, Object?> result = processor.process(
         LayoutNode.fromMap(<String, Object?>{
           'id': 'w1',
           'type': 'Text',
-          'bindings': <String, Map<String, Object?>>{'text': binding.toJson()},
+          'properties': <String, Object?>{
+            'text': <String, Object?>{r'$bind': 'user.name'},
+          },
         }),
       );
       expect(result['text'], 'Alice');
     });
 
     test('handles format transformer', () {
-      final Binding binding = Binding.fromMap(<String, Object?>{
-        'path': 'user.name',
-        'format': 'Welcome, {}!',
-      });
       final Map<String, Object?> result = processor.process(
         LayoutNode.fromMap(<String, Object?>{
           'id': 'w1',
           'type': 'Text',
-          'bindings': <String, Map<String, Object?>>{'text': binding.toJson()},
+          'properties': <String, Object?>{
+            'text': <String, Object?>{
+              r'$bind': 'user.name',
+              'format': 'Welcome, {}!',
+            },
+          },
         }),
       );
       expect(result['text'], 'Welcome, Alice!');
     });
 
     test('handles condition transformer (true case)', () {
-      final Binding binding = Binding.fromMap(<String, Object?>{
-        'path': 'user.isPremium',
-        'condition': <String, String>{'ifValue': 'Premium User', 'elseValue': 'Standard User'},
-      });
       final Map<String, Object?> result = processor.process(
         LayoutNode.fromMap(<String, Object?>{
           'id': 'w1',
           'type': 'Text',
-          'bindings': <String, Map<String, Object?>>{'text': binding.toJson()},
+          'properties': <String, Object?>{
+            'text': <String, Object?>{
+              r'$bind': 'user.isPremium',
+              'condition': <String, String>{
+                'ifValue': 'Premium User',
+                'elseValue': 'Standard User',
+              },
+            },
+          },
         }),
       );
       expect(result['text'], 'Premium User');
@@ -84,33 +90,41 @@ void main() {
       state.state = <String, Object?>{
         'user': <String, bool>{'isPremium': false},
       };
-      final Binding binding = Binding.fromMap(<String, Object?>{
-        'path': 'user.isPremium',
-        'condition': <String, String>{'ifValue': 'Premium User', 'elseValue': 'Standard User'},
-      });
       final Map<String, Object?> result = processor.process(
         LayoutNode.fromMap(<String, Object?>{
           'id': 'w1',
           'type': 'Text',
-          'bindings': <String, Map<String, Object?>>{'text': binding.toJson()},
+          'properties': <String, Object?>{
+            'text': <String, Object?>{
+              r'$bind': 'user.isPremium',
+              'condition': <String, String>{
+                'ifValue': 'Premium User',
+                'elseValue': 'Standard User',
+              },
+            },
+          },
         }),
       );
       expect(result['text'], 'Standard User');
     });
 
     test('handles map transformer (found case)', () {
-      final Binding binding = Binding.fromMap(<String, Object?>{
-        'path': 'status',
-        'map': <String, Object>{
-          'mapping': <String, String>{'active': 'Online', 'inactive': 'Offline'},
-          'fallback': 'Unknown',
-        },
-      });
       final Map<String, Object?> result = processor.process(
         LayoutNode.fromMap(<String, Object?>{
           'id': 'w1',
           'type': 'Text',
-          'bindings': <String, Map<String, Object?>>{'text': binding.toJson()},
+          'properties': <String, Object?>{
+            'text': <String, Object?>{
+              r'$bind': 'status',
+              'map': <String, Object>{
+                'mapping': <String, String>{
+                  'active': 'Online',
+                  'inactive': 'Offline',
+                },
+                'fallback': 'Unknown',
+              },
+            },
+          },
         }),
       );
       expect(result['text'], 'Online');
@@ -118,18 +132,22 @@ void main() {
 
     test('handles map transformer (fallback case)', () {
       state.state = <String, Object?>{'status': 'away'};
-      final Binding binding = Binding.fromMap(<String, Object?>{
-        'path': 'status',
-        'map': <String, Object>{
-          'mapping': <String, String>{'active': 'Online', 'inactive': 'Offline'},
-          'fallback': 'Unknown',
-        },
-      });
       final Map<String, Object?> result = processor.process(
         LayoutNode.fromMap(<String, Object?>{
           'id': 'w1',
           'type': 'Text',
-          'bindings': <String, Map<String, Object?>>{'text': binding.toJson()},
+          'properties': <String, Object?>{
+            'text': <String, Object?>{
+              r'$bind': 'status',
+              'map': <String, Object>{
+                'mapping': <String, String>{
+                  'active': 'Online',
+                  'inactive': 'Offline',
+                },
+                'fallback': 'Unknown',
+              },
+            },
+          },
         }),
       );
       expect(result['text'], 'Unknown');
@@ -137,46 +155,51 @@ void main() {
 
     test('handles map transformer with no fallback (miss case)', () {
       state.state = <String, Object?>{'status': 'away'};
-      final Binding binding = Binding.fromMap(<String, Object?>{
-        'path': 'status',
-        'map': <String, Map<String, String>>{
-          'mapping': <String, String>{'active': 'Online', 'inactive': 'Offline'},
-        },
-      });
       final Map<String, Object?> result = processor.process(
         LayoutNode.fromMap(<String, Object?>{
           'id': 'w1',
           'type': 'Text',
-          'bindings': <String, Map<String, Object?>>{'text': binding.toJson()},
+          'properties': <String, Object?>{
+            'text': <String, Object?>{
+              r'$bind': 'status',
+              'map': <String, Map<String, String>>{
+                'mapping': <String, String>{
+                  'active': 'Online',
+                  'inactive': 'Offline',
+                },
+              },
+            },
+          },
         }),
       );
       expect(result['text'], isNull);
     });
 
     test('returns raw value when no transformer is present', () {
-      final Binding binding = Binding.fromMap(<String, Object?>{'path': 'count'});
       final Map<String, Object?> result = processor.process(
         LayoutNode.fromMap(<String, Object?>{
           'id': 'w1',
           'type': 'Text',
-          'bindings': <String, Map<String, Object?>>{'value': binding.toJson()},
+          'properties': <String, Object?>{
+            'value': <String, Object?>{r'$bind': 'count'},
+          },
         }),
       );
       expect(result['value'], 42);
     });
 
-    test('returns empty map for empty bindings', () {
+    test('returns empty map for empty properties', () {
       final Map<String, Object?> result = processor.process(
         LayoutNode.fromMap(<String, Object?>{
           'id': 'w1',
           'type': 'Text',
-          'bindings': <String, Object?>{},
+          'properties': <String, Object?>{},
         }),
       );
       expect(result, isEmpty);
     });
 
-    test('returns empty map for null bindings', () {
+    test('returns empty map for null properties', () {
       final Map<String, Object?> result = processor.process(
         LayoutNode.fromMap(<String, Object?>{'id': 'w1', 'type': 'Text'}),
       );
@@ -186,12 +209,13 @@ void main() {
     test(
       'returns default value for a path that does not exist in the state',
       () {
-        final Binding binding = Binding.fromMap(<String, Object?>{'path': 'user.age'});
         final Map<String, Object?> result = processor.process(
           LayoutNode.fromMap(<String, Object?>{
             'id': 'w1',
             'type': 'Text',
-            'bindings': <String, Map<String, Object?>>{'age': binding.toJson()},
+            'properties': <String, Object?>{
+              'age': <String, Object?>{r'$bind': 'user.age'},
+            },
           }),
         );
         expect(result['age'], isNull);
@@ -199,15 +223,19 @@ void main() {
     );
 
     group('Scoped Bindings', () {
-      final Map<String, Object> scopedData = <String, Object>{'title': 'Scoped Title', 'value': 100};
+      final Map<String, Object> scopedData = <String, Object>{
+        'title': 'Scoped Title',
+        'value': 100,
+      };
 
       test('resolves item path from scoped data', () {
-        final Binding binding = Binding.fromMap(<String, Object?>{'path': 'item.title'});
         final Map<String, Object?> result = processor.processScoped(
           LayoutNode.fromMap(<String, Object?>{
             'id': 'w1',
             'type': 'Text',
-            'bindings': <String, Map<String, Object?>>{'text': binding.toJson()},
+            'properties': <String, Object?>{
+              'text': <String, Object?>{r'$bind': 'item.title'},
+            },
           }),
           scopedData,
         );
@@ -215,12 +243,13 @@ void main() {
       });
 
       test('resolves global path even when scoped data is present', () {
-        final Binding binding = Binding.fromMap(<String, Object?>{'path': 'user.name'});
         final Map<String, Object?> result = processor.processScoped(
           LayoutNode.fromMap(<String, Object?>{
             'id': 'w1',
             'type': 'Text',
-            'bindings': <String, Map<String, Object?>>{'text': binding.toJson()},
+            'properties': <String, Object?>{
+              'text': <String, Object?>{r'$bind': 'user.name'},
+            },
           }),
           scopedData,
         );
@@ -228,15 +257,16 @@ void main() {
       });
 
       test('applies transformer to scoped data', () {
-        final Binding binding = Binding.fromMap(<String, Object?>{
-          'path': 'item.value',
-          'format': 'Value: {}',
-        });
         final Map<String, Object?> result = processor.processScoped(
           LayoutNode.fromMap(<String, Object?>{
             'id': 'w1',
             'type': 'Text',
-            'bindings': <String, Map<String, Object?>>{'text': binding.toJson()},
+            'properties': <String, Object?>{
+              'text': <String, Object?>{
+                r'$bind': 'item.value',
+                'format': 'Value: {}',
+              },
+            },
           }),
           scopedData,
         );
@@ -244,12 +274,13 @@ void main() {
       });
 
       test('returns default value for item path when scoped data is empty', () {
-        final Binding binding = Binding.fromMap(<String, Object?>{'path': 'item.title'});
         final Map<String, Object?> result = processor.processScoped(
           LayoutNode.fromMap(<String, Object?>{
             'id': 'w1',
             'type': 'Text',
-            'bindings': <String, Map<String, Object?>>{'text': binding.toJson()},
+            'properties': <String, Object?>{
+              'text': <String, Object?>{r'$bind': 'item.title'},
+            },
           }),
           <String, Object?>{},
         );

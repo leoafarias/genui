@@ -28,9 +28,10 @@ class FilterChipGroup extends StatelessWidget {
             const SizedBox(height: 16.0),
             ElevatedButton(
               onPressed: () => FcpProvider.of(context)?.onEvent?.call(
-                EventPayload(
+                Event(
                   sourceNodeId: 'filter_chip_group',
                   eventName: 'submit',
+                  timestamp: DateTime.now(),
                 ),
               ),
               style: ElevatedButton.styleFrom(

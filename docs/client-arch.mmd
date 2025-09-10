@@ -1,0 +1,12 @@
+graph TD
+    subgraph "Application Code"
+        A[App Logic] -- "Uses" --> B(UiAgent);
+    end
+
+    subgraph "genui_client Package"
+        B -- "Orchestrates" --> C(GenUIClient);
+        B -- "and" --> D(GenUiManager);
+        C -- "HTTP Communication" --> E((genui_server));
+        D -- "Manages State for" --> F(GenUiSurface);
+        F -- "Builds Widgets using" --> G(Catalog);
+    end

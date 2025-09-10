@@ -16,6 +16,6 @@ export 'src/core/widget_catalog_registry.dart';
 
 // Public data models used in the FCP.
 export 'src/models/models.dart';
+export 'src/models/streaming_models.dart';
 export 'src/widgets/fcp_provider.dart';
 export 'src/widgets/fcp_view.dart';
-export 'src/widgets/fcp_view_controller.dart';

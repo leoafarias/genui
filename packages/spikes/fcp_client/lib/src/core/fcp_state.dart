@@ -2,9 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-/// @docImport 'state_patcher.dart';
-library;
-
 import 'package:flutter/foundation.dart';
 
 import '../models/models.dart';
@@ -34,8 +31,7 @@ class FcpState with ChangeNotifier {
 
   /// Sets a new state object and notifies listeners.
   ///
-  /// This is used for wholesale replacement of the state. For partial updates,
-  /// use [StatePatcher].
+  /// This is used for wholesale replacement of the state.
   set state(Map<String, Object?> newState) {
     _state = newState;
     notifyListeners();

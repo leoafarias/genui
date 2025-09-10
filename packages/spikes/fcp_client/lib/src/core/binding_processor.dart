@@ -25,12 +25,12 @@ class BindingProcessor {
     if (itemDefJson == null) {
       // It's valid for a widget to not have a definition, in which case
       // it has no properties that can be bound.
-      return const <String, Object?>{};
+      return node.properties ?? const <String, Object?>{};
     }
     final WidgetDefinition itemDef = WidgetDefinition.fromMap(
       itemDefJson as Map<String, Object?>,
     );
-    return _processBindings(node.bindings, itemDef, null);
+    return _processProperties(node.properties, itemDef, null);
   }
 
   /// Resolves all bindings for a given layout node within a specific data
@@ -46,33 +46,39 @@ class BindingProcessor {
     if (itemDefJson == null) {
       // It's valid for a widget to not have a definition, in which case
       // it has no properties that can be bound.
-      return const <String, Object?>{};
+      return node.properties ?? const <String, Object?>{};
     }
     final WidgetDefinition itemDef = WidgetDefinition.fromMap(
       itemDefJson as Map<String, Object?>,
     );
-    return _processBindings(node.bindings, itemDef, scopedData);
+    return _processProperties(node.properties, itemDef, scopedData);
   }
 
-  Map<String, Object?> _processBindings(
-    Map<String, Binding>? bindings,
+  Map<String, Object?> _processProperties(
+    Map<String, Object?>? properties,
     WidgetDefinition itemDef,
     Map<String, Object?>? scopedData,
   ) {
     final Map<String, Object?> resolvedProperties = <String, Object?>{};
-    if (bindings == null) {
+    if (properties == null) {
       return resolvedProperties;
     }
 
-    for (final MapEntry<String, Binding> entry in bindings.entries) {
+    for (final MapEntry<String, Object?> entry in properties.entries) {
       final String propertyName = entry.key;
-      final Binding binding = entry.value;
-      resolvedProperties[propertyName] = _resolveBinding(
-        binding,
-        propertyName,
-        itemDef,
-        scopedData,
-      );
+      final Object? value = entry.value;
+
+      if (value is Map<String, Object?> && value.containsKey(r'$bind')) {
+        final Binding binding = Binding.fromMap(value);
+        resolvedProperties[propertyName] = _resolveBinding(
+          binding,
+          propertyName,
+          itemDef,
+          scopedData,
+        );
+      } else {
+        resolvedProperties[propertyName] = value;
+      }
     }
 
     return resolvedProperties;
@@ -173,7 +179,9 @@ class BindingProcessor {
         return null;
       }
       // Return the default for the first type in the list.
-      return _getDefaultValueForType(Schema.fromMap(<String, Object?>{'type': type.first}));
+      return _getDefaultValueForType(
+        Schema.fromMap(<String, Object?>{'type': type.first}),
+      );
     }
     return null;
   }

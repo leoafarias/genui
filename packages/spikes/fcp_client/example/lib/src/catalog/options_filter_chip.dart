@@ -59,9 +59,10 @@ class _OptionsFilterChipState extends State<OptionsFilterChip> {
                             _currentChipLabel = newValue;
                           });
                           FcpProvider.of(context)?.onEvent?.call(
-                            EventPayload(
+                            Event(
                               sourceNodeId: 'options_filter_chip',
                               eventName: 'optionSelected',
+                              timestamp: DateTime.now(),
                               arguments: {'value': newValue},
                             ),
                           );

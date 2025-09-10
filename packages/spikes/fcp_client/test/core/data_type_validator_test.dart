@@ -31,7 +31,11 @@ void main() {
     });
 
     test('returns true for valid data', () async {
-      final Map<String, Object> data = <String, Object>{'name': 'Alice', 'email': 'alice@example.com', 'age': 30};
+      final Map<String, Object> data = <String, Object>{
+        'name': 'Alice',
+        'email': 'alice@example.com',
+        'age': 30,
+      };
       final bool isValid = await validator.validate(
         dataType: 'user',
         data: data,
@@ -68,7 +72,10 @@ void main() {
     });
 
     test('returns false for invalid data (wrong format)', () async {
-      final Map<String, String> data = <String, String>{'name': 'Alice', 'email': 'not-an-email'};
+      final Map<String, String> data = <String, String>{
+        'name': 'Alice',
+        'email': 'not-an-email',
+      };
       final bool isValid = await validator.validate(
         dataType: 'user',
         data: data,

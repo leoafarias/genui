@@ -4,7 +4,7 @@
 
 import 'package:flutter/material.dart';
 
-import '../models/models.dart';
+import '../models/streaming_models.dart';
 
 /// An [InheritedWidget] that provides FCP-related data to the widget tree.
 ///
@@ -18,7 +18,7 @@ class FcpProvider extends InheritedWidget {
 
   /// A callback function that is invoked when an event is triggered by a
   /// widget.
-  final ValueChanged<EventPayload>? onEvent;
+  final ValueChanged<Event>? onEvent;
 
   /// Retrieves the [FcpProvider] from the given [context].
   static FcpProvider? of(BuildContext context) {

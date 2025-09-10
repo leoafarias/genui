@@ -17,7 +17,8 @@ class DataTypeValidator {
     required Map<String, Object?> data,
     required WidgetCatalog catalog,
   }) async {
-    final Map<String, Object?>? schemaMap = catalog.dataTypes[dataType] as Map<String, Object?>?;
+    final Map<String, Object?>? schemaMap =
+        catalog.dataTypes[dataType] as Map<String, Object?>?;
     if (schemaMap == null) {
       // If the data type is not defined in the catalog, we consider it valid.
       // A stricter implementation might throw an error here.
@@ -25,7 +26,10 @@ class DataTypeValidator {
     }
 
     final Schema schema = Schema.fromMap(schemaMap);
-    final List<ValidationError> errors = await schema.validate(data, strictFormat: true);
+    final List<ValidationError> errors = await schema.validate(
+      data,
+      strictFormat: true,
+    );
 
     return errors.isEmpty;
   }

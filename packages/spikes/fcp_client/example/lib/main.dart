@@ -2,224 +2,24 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:fcp_client/fcp_client.dart';
-
-import 'src/fcp_registry.dart';
 
 void main() {
-  runApp(const JsonFcpViewerApp());
+  runApp(const GenUiExampleApp());
 }
 
-class JsonFcpViewerApp extends StatelessWidget {
-  const JsonFcpViewerApp({super.key});
+class GenUiExampleApp extends StatelessWidget {
+  const GenUiExampleApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'FCP JSON Viewer',
+      title: 'GenUI Example',
       theme: ThemeData(
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: const FcpViewerHomePage(),
-    );
-  }
-}
-
-class FcpViewerHomePage extends StatefulWidget {
-  const FcpViewerHomePage({super.key});
-
-  @override
-  State<FcpViewerHomePage> createState() => _FcpViewerHomePageState();
-}
-
-class _FcpViewerHomePageState extends State<FcpViewerHomePage> {
-  final _stateUpdateController = TextEditingController();
-  final _layoutUpdateController = TextEditingController();
-  final _fcpViewController = FcpViewController();
-
-  late final DynamicUIPacket _initialPacket;
-  String? _error;
-
-  @override
-  void initState() {
-    super.initState();
-    _initialPacket = DynamicUIPacket(
-      formatVersion: '0.1.0',
-      layout: Layout(
-        root: 'root',
-        nodes: [LayoutNode(id: 'root', type: 'Column')],
-      ),
-      state: {},
-    );
-  }
-
-  @override
-  void dispose() {
-    _stateUpdateController.dispose();
-    _layoutUpdateController.dispose();
-    _fcpViewController.dispose();
-    super.dispose();
-  }
-
-  void _applyStateUpdate() {
-    setState(() => _error = null);
-    try {
-      final jsonText = _stateUpdateController.text;
-      if (jsonText.isEmpty) {
-        setState(() => _error = 'State update JSON cannot be empty.');
-        return;
-      }
-      final jsonMap = json.decode(jsonText) as Map<String, Object?>;
-      final update = StateUpdate.fromMap(jsonMap);
-      _fcpViewController.patchState(update);
-    } catch (e) {
-      setState(() => _error = 'Error parsing state update JSON: $e');
-    }
-  }
-
-  void _applyLayoutUpdate() {
-    setState(() => _error = null);
-    try {
-      final jsonText = _layoutUpdateController.text;
-      if (jsonText.isEmpty) {
-        setState(() => _error = 'Layout update JSON cannot be empty.');
-        return;
-      }
-      final jsonMap = json.decode(jsonText) as Map<String, Object?>;
-      final update = LayoutUpdate.fromMap(jsonMap);
-      _fcpViewController.patchLayout(update);
-    } catch (e) {
-      setState(() => _error = 'Error parsing layout update JSON: $e');
-    }
-  }
-
-  void _useSampleState() {
-    final sampleState = {
-      'operations': [
-        {
-          'op': 'patch',
-          'patch': {'op': 'add', 'path': '/greeting', 'value': 'Hello'}
-        },
-        {
-          'op': 'patch',
-          'patch': {
-            'op': 'add',
-            'path': '/user',
-            'value': {'name': 'World'}
-          }
-        }
-      ]
-    };
-    _stateUpdateController.text =
-        const JsonEncoder.withIndent('  ').convert(sampleState);
-  }
-
-  void _useSampleLayout() {
-    final sampleLayout = {
-      'operations': [
-        {
-          'op': 'add',
-          'nodes': [
-            {
-              'id': 'greeting_text',
-              'type': 'Text',
-              'properties': {'data': r'${greeting}, ${user.name}!'}
-            }
-          ],
-          'targetNodeId': 'root',
-          'targetProperty': 'children',
-        }
-      ]
-    };
-    _layoutUpdateController.text =
-        const JsonEncoder.withIndent('  ').convert(sampleLayout);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final registry = createRegistry();
-    return Scaffold(
-      appBar: AppBar(title: const Text('FCP JSON Viewer')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            TextField(
-              controller: _stateUpdateController,
-              maxLines: 5,
-              decoration: const InputDecoration(
-                hintText:
-                    'Paste StateUpdate JSON here (e.g., {"operations": [{"op": "patch", "patch": {"op": "replace", "path": "/user/name", "value": "Bob"}}])',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 8.0),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton(
-                  onPressed: _useSampleState,
-                  child: const Text('Use Sample'),
-                ),
-                const SizedBox(width: 8.0),
-                ElevatedButton(
-                  onPressed: _applyStateUpdate,
-                  child: const Text('Apply State Update'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16.0),
-            TextField(
-              controller: _layoutUpdateController,
-              maxLines: 5,
-              decoration: const InputDecoration(
-                hintText: 'Paste LayoutUpdate JSON here',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 8.0),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton(
-                  onPressed: _useSampleLayout,
-                  child: const Text('Use Sample'),
-                ),
-                const SizedBox(width: 8.0),
-                ElevatedButton(
-                  onPressed: _applyLayoutUpdate,
-                  child: const Text('Apply Layout Update'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16.0),
-            if (_error != null)
-              Text(_error!, style: const TextStyle(color: Colors.red)),
-            Expanded(
-              child: FcpView(
-                packet: _initialPacket,
-                catalog: registry.buildCatalog(),
-                registry: registry,
-                controller: _fcpViewController,
-                onEvent: (payload) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        'Event: ${payload.eventName} from ${payload.sourceNodeId}',
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
+      home: const Scaffold(body: Center(child: Text('GenUI Example'))),
     );
   }
 }

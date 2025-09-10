@@ -21,7 +21,8 @@ class CatalogService {
   ///
   /// Throws a [FormatException] if the JSON is invalid.
   WidgetCatalog parse(String jsonString) {
-    final Map<String, Object?> jsonMap = json.decode(jsonString) as Map<String, Object?>;
+    final Map<String, Object?> jsonMap =
+        json.decode(jsonString) as Map<String, Object?>;
     // Add validation against the JSON schema from the FCP document.
     if (jsonMap['catalogVersion'] is! String) {
       throw const FormatException(

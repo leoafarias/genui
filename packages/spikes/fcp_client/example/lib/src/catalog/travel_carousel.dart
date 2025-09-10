@@ -79,9 +79,10 @@ class _TravelCarouselItemState extends State<_TravelCarouselItem> {
       },
       onTap: () {
         FcpProvider.of(context)?.onEvent?.call(
-          EventPayload(
+          Event(
             sourceNodeId: 'travel_carousel',
             eventName: 'itemSelected',
+            timestamp: DateTime.now(),
             arguments: {'value': widget.data.title},
           ),
         );

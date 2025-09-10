@@ -505,19 +505,60 @@ void main() {
         expect(anyOf, isNotNull);
         anyOf!;
         expect(anyOf, hasLength(11));
-        expect(anyOf.where((s) => s.type == firebase_ai.SchemaType.string), isNotEmpty);
-        expect(anyOf.where((s) => s.type == firebase_ai.SchemaType.number), isNotEmpty);
-        expect(anyOf.where((s) => s.type == firebase_ai.SchemaType.integer), isNotEmpty);
-        expect(anyOf.where((s) => s.type == firebase_ai.SchemaType.boolean), isNotEmpty);
-        expect(anyOf.where((s) => s.type == firebase_ai.SchemaType.object && s.nullable != true), isNotEmpty);
-        expect(anyOf.where((s) => s.type == firebase_ai.SchemaType.object && s.nullable == true), isNotEmpty);
-        final arrays = anyOf.where((s) => s.type == firebase_ai.SchemaType.array).toList();
+        expect(
+          anyOf.where((s) => s.type == firebase_ai.SchemaType.string),
+          isNotEmpty,
+        );
+        expect(
+          anyOf.where((s) => s.type == firebase_ai.SchemaType.number),
+          isNotEmpty,
+        );
+        expect(
+          anyOf.where((s) => s.type == firebase_ai.SchemaType.integer),
+          isNotEmpty,
+        );
+        expect(
+          anyOf.where((s) => s.type == firebase_ai.SchemaType.boolean),
+          isNotEmpty,
+        );
+        expect(
+          anyOf.where(
+            (s) =>
+                s.type == firebase_ai.SchemaType.object && s.nullable != true,
+          ),
+          isNotEmpty,
+        );
+        expect(
+          anyOf.where(
+            (s) =>
+                s.type == firebase_ai.SchemaType.object && s.nullable == true,
+          ),
+          isNotEmpty,
+        );
+        final arrays = anyOf
+            .where((s) => s.type == firebase_ai.SchemaType.array)
+            .toList();
         expect(arrays, hasLength(5));
-        expect(arrays.where((s) => s.items?.type == firebase_ai.SchemaType.string), isNotEmpty);
-        expect(arrays.where((s) => s.items?.type == firebase_ai.SchemaType.number), isNotEmpty);
-        expect(arrays.where((s) => s.items?.type == firebase_ai.SchemaType.integer), isNotEmpty);
-        expect(arrays.where((s) => s.items?.type == firebase_ai.SchemaType.boolean), isNotEmpty);
-        expect(arrays.where((s) => s.items?.type == firebase_ai.SchemaType.object), isNotEmpty);
+        expect(
+          arrays.where((s) => s.items?.type == firebase_ai.SchemaType.string),
+          isNotEmpty,
+        );
+        expect(
+          arrays.where((s) => s.items?.type == firebase_ai.SchemaType.number),
+          isNotEmpty,
+        );
+        expect(
+          arrays.where((s) => s.items?.type == firebase_ai.SchemaType.integer),
+          isNotEmpty,
+        );
+        expect(
+          arrays.where((s) => s.items?.type == firebase_ai.SchemaType.boolean),
+          isNotEmpty,
+        );
+        expect(
+          arrays.where((s) => s.items?.type == firebase_ai.SchemaType.object),
+          isNotEmpty,
+        );
       });
     });
 

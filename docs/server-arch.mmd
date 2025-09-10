@@ -1,0 +1,9 @@
+graph TD
+    subgraph "genui_server"
+        A["Client Request"] --> B{"API Endpoint"}
+        B -- "/generateUi" --> D["generateUiFlow (Streaming)"]
+
+        D -- "Invokes LLM" --> F{"LLM (Gemini)"}
+        F -- "Calls Tools" --> G["UI Tools (addOrUpdateSurface, deleteSurface)"]
+        G -- "Streams Tool Requests" --> H["Streamed JSON Response"]
+    end
