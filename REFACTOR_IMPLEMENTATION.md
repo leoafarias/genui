@@ -8,26 +8,26 @@ This document outlines the step-by-step plan to refactor the `fcp_client` packag
 
 The goal of this phase is to create all the necessary Dart data models for parsing the JSONL stream and handling GSP messages, and to adjust the existing models to the new specification.
 
-- [ ] **Task 1.1: Create `streaming_models.dart`**: Create a new file `packages/spikes/fcp_client/lib/src/models/streaming_models.dart` to define the new GSP message types.
+- [x] **Task 1.1: Create `streaming_models.dart`**: Create a new file `packages/spikes/fcp_client/lib/src/models/streaming_models.dart` to define the new GSP message types.
   - Define a sealed `StreamMessage` class.
   - Define `StreamHeader`, `Layout`, `LayoutRoot`, and `StateUpdate` as subclasses or implementations of `StreamMessage`.
   - Define the `ClientRequest`, `Event`, and `UnknownCatalogError` models.
-- [ ] **Task 1.2: Update `LayoutNode`**: Modify the existing `LayoutNode` model in `packages/spikes/fcp_client/lib/src/models/models.dart`.
+- [x] **Task 1.2: Update `LayoutNode`**: Modify the existing `LayoutNode` model in `packages/spikes/fcp_client/lib/src/models/models.dart`.
   - Remove the `bindings` map.
   - Update the logic to handle bindings directly within the `properties` map, where a property value is a map containing a `"$bind"` key.
-- [ ] **Task 1.3: Update `BindingProcessor`**: Modify the `BindingProcessor` in `packages/spikes/fcp_client/lib/src/core/binding_processor.dart` to reflect the `LayoutNode` changes. It should now look for binding objects within the `properties` map instead of a separate `bindings` map.
-- [ ] **Task 1.4: Remove Obsolete Models**: Delete the old `StateUpdate`, `LayoutUpdate`, and `DynamicUIPacket` models from `packages/spikes/fcp_client/lib/src/models/models.dart`. Also remove the `FcpViewController` which is now obsolete.
-- [ ] **Task 1.5: Update Tests**: Update any unit tests in `packages/spikes/fcp_client/test/` that are now broken due to the model changes. This will likely involve `models_test.dart` and `binding_processor_test.dart`.
+- [x] **Task 1.3: Update `BindingProcessor`**: Modify the `BindingProcessor` in `packages/spikes/fcp_client/lib/src/core/binding_processor.dart` to reflect the `LayoutNode` changes. It should now look for binding objects within the `properties` map instead of a separate `bindings` map.
+- [x] **Task 1.4: Remove Obsolete Models**: Delete the old `StateUpdate`, `LayoutUpdate`, and `DynamicUIPacket` models from `packages/spikes/fcp_client/lib/src/models/models.dart`. Also remove the `FcpViewController` which is now obsolete.
+- [x] **Task 1.5: Update Tests**: Update any unit tests in `packages/spikes/fcp_client/test/` that are now broken due to the model changes. This will likely involve `models_test.dart` and `binding_processor_test.dart`.
 
 #### Post-Phase 1 Actions
 
--   [ ] Run `dart_fix` and `dart_format` on the modified files.
--   [ ] Run `analyze_files` and fix any issues.
--   [ ] Run all tests in `packages/spikes/fcp_client/test/` to ensure they pass.
--   [ ] Run `dart_format` again.
--   [ ] Present a `git diff` and a commit message for approval.
--   [ ] Update the Journal.
--   [ ] Wait for approval before proceeding.
+-   [x] Run `dart_fix` and `dart_format` on the modified files.
+-   [x] Run `analyze_files` and fix any issues.
+-   [x] Run all tests in `packages/spikes/fcp_client/test/` to ensure they pass.
+-   [x] Run `dart_format` again.
+-   [x] Present a `git diff` and a commit message for approval.
+-   [x] Update the Journal.
+-   [x] Wait for approval before proceeding.
 
 ### Phase 2: Implement the `GspInterpreter`
 
@@ -109,3 +109,9 @@ The final phase is to update the example app to use the new streaming client.
 ## Journal
 
 _This section will be updated after each phase to track the progress and any learnings from the implementation._
+
+### **Phase 1 Journal**
+
+Phase 1 is complete. All foundational data models for the GenUI Streaming Protocol have been created in `streaming_models.dart`. The obsolete `DynamicUIPacket`, `StateUpdate`, `LayoutUpdate`, and `FcpViewController` models have been removed from the codebase, and the `LayoutNode` and `BindingProcessor` have been refactored to support the new inline binding mechanism.
+
+The process involved several iterations of running `analyze_files` to identify and fix issues related to the removal of the old models. The test files were significantly impacted, and many obsolete tests were removed and replaced with placeholders for the new architecture. After fixing all analysis issues, all remaining tests passed. The code has been formatted and committed.
