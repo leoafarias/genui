@@ -227,6 +227,38 @@ void main() {
       );
     });
 
+    test('generates valid incremental prompt when catalog has no items', () {
+      const emptyCatalog = Catalog(<CatalogItem>[], catalogId: 'empty_catalog');
+      final String prompt = PromptBuilder.chat(
+        catalog: emptyCatalog,
+        catalogPromptMode: CatalogPromptMode.incremental,
+      ).systemPromptJoined();
+
+      expect(prompt, contains('COMMON_TYPES'));
+      expect(prompt, contains('A2UI_CATALOG_MANIFEST'));
+      expect(prompt, contains('CATALOG_FUNCTIONS'));
+      expect(prompt, contains('MESSAGE_SCHEMA'));
+      expect(prompt, contains('loadCatalogItems'));
+      expect(prompt, contains('{"items": []}'));
+      expect(prompt, contains('"items": []'));
+      expect(prompt, isNot(contains('CATALOG_SCHEMA')));
+    });
+
+    test(
+      'generates prompt for empty catalog with custom non-create operations',
+      () {
+        const emptyCatalog = Catalog(<CatalogItem>[]);
+        final String prompt = PromptBuilder.custom(
+          catalog: emptyCatalog,
+          allowedOperations: SurfaceOperations.updateOnly(dataModel: false),
+          catalogPromptMode: CatalogPromptMode.incremental,
+        ).systemPromptJoined();
+
+        expect(prompt, contains('A2UI_CATALOG_MANIFEST'));
+        expect(prompt, contains('{"items": []}'));
+      },
+    );
+
     test('matches the golden for the test catalog', () {
       final String prompt = PromptBuilder.chat(
         catalog: testCatalog,

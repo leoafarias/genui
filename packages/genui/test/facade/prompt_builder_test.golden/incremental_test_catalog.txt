@@ -28,7 +28,7 @@ IMPORTANT: loadCatalogItems is available to load A2UI catalog item schemas and e
   "version": "v0.9",
   "createSurface": {
     "surfaceId": "main",
-    "catalogId": "https://a2ui.org/specification/v0_9/basic_catalog.json",
+    "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json",
     "sendDataModel": true
   }
 }
@@ -424,7 +424,8 @@ available components and a short description of each, but NOT their full schemas
 
 Before emitting any A2UI, call the loadCatalogItems tool (for example,
 {"items": ["Text"]}) to load the exact schema and examples for the components
-you need.
+you need. Do not reload components you already loaded with loadCatalogItems in an
+earlier turn.
 
 In updateComponents.components, each component is an object with:
 - id: a unique component id. Use "root" for the root component.

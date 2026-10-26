@@ -27,98 +27,242 @@ void main() {
   );
   final metaCatalog = Catalog([fancyItem], catalogId: 'meta_catalog');
 
+  List<JsonMap> itemsOf(JsonMap payload) =>
+      (payload['items']! as List<Object?>).cast<JsonMap>();
+
   group('CatalogContext.manifest', () {
     test('includes catalog item names and descriptions', () {
-      final CatalogManifest manifest = CatalogContext.manifest(catalog);
+      final JsonMap manifest = CatalogContext.manifest(catalog);
+      final List<JsonMap> items = itemsOf(manifest);
 
       expect(
-        manifest.items.map((CatalogManifestItem e) => e.name),
+        items.map((JsonMap e) => e['name']),
         containsAll(<String>['Card', 'Text', 'Button']),
       );
 
-      final CatalogManifestItem card = manifest.items.firstWhere(
-        (CatalogManifestItem e) => e.name == 'Card',
-      );
+      final JsonMap card = items.firstWhere((JsonMap e) => e['name'] == 'Card');
       // Don't pin the exact wording (it lives in BasicCatalogItems and may
       // change). The "derives from schema description" test below pins the
       // wiring with a controlled item.
-      expect(card.description, isNotEmpty);
-      expect(manifest.catalogId, 'test_catalog');
+      expect(card['description'], isA<String>());
+      expect(card['description']! as String, isNotEmpty);
+      expect(manifest['catalogId'], 'test_catalog');
     });
 
     test('derives the description from the schema description', () {
-      final CatalogManifest manifest = CatalogContext.manifest(metaCatalog);
-      final CatalogManifestItem item = manifest.items.single;
+      final JsonMap manifest = CatalogContext.manifest(metaCatalog);
+      final JsonMap item = itemsOf(manifest).single;
 
-      expect(item.description, 'A fancy component for decorative content.');
+      expect(item['description'], 'A fancy component for decorative content.');
     });
 
     test('manifest items only carry name and description', () {
-      final CatalogManifest manifest = CatalogContext.manifest(catalog);
+      final JsonMap manifest = CatalogContext.manifest(catalog);
 
-      for (final CatalogManifestItem item in manifest.items) {
-        final Iterable<String> keys = item.toJson().keys;
+      for (final JsonMap item in itemsOf(manifest)) {
+        final Iterable<String> keys = item.keys;
         expect(keys, containsAll(<String>['name', 'description']));
         expect(keys, hasLength(2));
       }
     });
+
+    test('omits catalogId when catalogId is null', () {
+      final anonymousCatalog = Catalog(<CatalogItem>[BasicCatalogItems.text]);
+      final JsonMap manifest = CatalogContext.manifest(anonymousCatalog);
+
+      expect(manifest.containsKey('catalogId'), isFalse);
+      expect(manifest['catalogId'], isNull);
+      expect(itemsOf(manifest), hasLength(1));
+      expect(itemsOf(manifest).single['name'], 'Text');
+    });
+
+    test('derives fallback description when schema has no description', () {
+      final noDescItem = CatalogItem(
+        name: 'Plain',
+        dataSchema: S.object(properties: <String, Schema>{'value': S.string()}),
+        widgetBuilder: (_) => const SizedBox.shrink(),
+      );
+      final catalog = Catalog(<CatalogItem>[
+        noDescItem,
+      ], catalogId: 'plain_cat');
+      final JsonMap manifest = CatalogContext.manifest(catalog);
+      final JsonMap item = itemsOf(manifest).single;
+
+      expect(item['description'], 'A2UI component named Plain.');
+    });
+
+    test(
+      'derives fallback description when schema description is whitespace',
+      () {
+        final whitespaceDescItem = CatalogItem(
+          name: 'Whitespace',
+          dataSchema: S.object(
+            description: '   \t\n  ',
+            properties: <String, Schema>{'value': S.string()},
+          ),
+          widgetBuilder: (_) => const SizedBox.shrink(),
+        );
+        final catalog = Catalog(<CatalogItem>[
+          whitespaceDescItem,
+        ], catalogId: 'ws_cat');
+        final JsonMap manifest = CatalogContext.manifest(catalog);
+        final JsonMap item = itemsOf(manifest).single;
+
+        expect(item['description'], 'A2UI component named Whitespace.');
+      },
+    );
+
+    test('trims whitespace surrounding schema description', () {
+      final paddedItem = CatalogItem(
+        name: 'Padded',
+        dataSchema: S.object(
+          description: '  Padded description text.  \n',
+          properties: <String, Schema>{'value': S.string()},
+        ),
+        widgetBuilder: (_) => const SizedBox.shrink(),
+      );
+      final catalog = Catalog(<CatalogItem>[
+        paddedItem,
+      ], catalogId: 'padded_cat');
+      final JsonMap manifest = CatalogContext.manifest(catalog);
+      final JsonMap item = itemsOf(manifest).single;
+
+      expect(item['description'], 'Padded description text.');
+    });
+
+    test('deduplicates catalog items by name in first-seen order', () {
+      final duplicateCatalog = Catalog(<CatalogItem>[
+        BasicCatalogItems.card,
+        BasicCatalogItems.text,
+        BasicCatalogItems.card,
+        BasicCatalogItems.button,
+        BasicCatalogItems.text,
+      ], catalogId: 'duplicate_catalog');
+
+      final JsonMap manifest = CatalogContext.manifest(duplicateCatalog);
+      final List<JsonMap> items = itemsOf(manifest);
+
+      expect(items.map((JsonMap e) => e['name']), <String>[
+        'Card',
+        'Text',
+        'Button',
+      ]);
+      expect(items, hasLength(3));
+    });
+
+    test(
+      'preserves the first encountered item description when duplicates exist',
+      () {
+        final item1 = CatalogItem(
+          name: 'DuplicatedWidget',
+          dataSchema: S.object(description: 'First description.'),
+          widgetBuilder: (_) => const SizedBox.shrink(),
+        );
+        final item2 = CatalogItem(
+          name: 'DuplicatedWidget',
+          dataSchema: S.object(description: 'Second description.'),
+          widgetBuilder: (_) => const SizedBox.shrink(),
+        );
+        final duplicateCatalog = Catalog(<CatalogItem>[
+          item1,
+          item2,
+        ], catalogId: 'dup_desc_catalog');
+
+        final JsonMap manifest = CatalogContext.manifest(duplicateCatalog);
+        final List<JsonMap> items = itemsOf(manifest);
+
+        expect(items, hasLength(1));
+        expect(items.single['name'], 'DuplicatedWidget');
+        expect(items.single['description'], 'First description.');
+      },
+    );
   });
 
   group('CatalogContext.loadItems', () {
     test('returns details for the requested items', () {
-      final LoadCatalogItemsResult result = CatalogContext.loadItems(
-        catalog,
-        <String>['Card', 'Text'],
-      );
-
-      expect(result.items.map((CatalogItemDetails e) => e.name), <String>[
+      final JsonMap result = CatalogContext.loadItems(catalog, <String>[
         'Card',
         'Text',
       ]);
-      expect(result.catalogId, 'test_catalog');
+
+      expect(itemsOf(result).map((JsonMap e) => e['name']), <String>[
+        'Card',
+        'Text',
+      ]);
+      expect(result['catalogId'], 'test_catalog');
     });
 
-    test('loaded schema includes id and component', () {
-      final LoadCatalogItemsResult result = CatalogContext.loadItems(
-        catalog,
-        <String>['Card'],
+    test('omits catalogId when catalogId is null', () {
+      final anonymousCatalog = Catalog(<CatalogItem>[BasicCatalogItems.text]);
+      final JsonMap result = CatalogContext.loadItems(
+        anonymousCatalog,
+        <String>['Text'],
       );
-      final properties =
-          result.items.single.schema['properties'] as Map<String, Object?>;
+
+      expect(result.containsKey('catalogId'), isFalse);
+      expect(result['catalogId'], isNull);
+      expect(itemsOf(result).map((JsonMap e) => e['name']), <String>['Text']);
+    });
+
+    test(
+      'throws for unknown catalog item with null catalogId when anonymous',
+      () {
+        final anonymousCatalog = Catalog(<CatalogItem>[BasicCatalogItems.text]);
+
+        expect(
+          () => CatalogContext.loadItems(anonymousCatalog, <String>[
+            'NotAComponent',
+          ]),
+          throwsA(
+            isA<CatalogItemNotFoundException>()
+                .having((e) => e.widgetType, 'widgetType', 'NotAComponent')
+                .having((e) => e.catalogId, 'catalogId', isNull),
+          ),
+        );
+      },
+    );
+
+    test('loaded schema includes id, component, and accessibility', () {
+      final JsonMap result = CatalogContext.loadItems(catalog, <String>[
+        'Card',
+      ]);
+      final schema = itemsOf(result).single['schema']! as JsonMap;
+      final properties = schema['properties']! as Map<String, Object?>;
 
       expect(
         properties.keys,
-        containsAll(<String>['id', 'component', 'child']),
+        containsAll(<String>['id', 'component', 'accessibility', 'child']),
       );
     });
 
     test('loaded schema marks id and component as required', () {
-      final LoadCatalogItemsResult result = CatalogContext.loadItems(
-        catalog,
-        <String>['Card'],
-      );
-      final required = result.items.single.schema['required'] as List<Object?>;
+      final JsonMap result = CatalogContext.loadItems(catalog, <String>[
+        'Card',
+      ]);
+      final schema = itemsOf(result).single['schema']! as JsonMap;
+      final required = schema['required']! as List<Object?>;
 
       expect(required, containsAll(<String>['id', 'component']));
+      expect(required, isNot(contains('accessibility')));
     });
 
     test('loaded Card schema keeps child as required', () {
-      final LoadCatalogItemsResult result = CatalogContext.loadItems(
-        catalog,
-        <String>['Card'],
-      );
-      final required = result.items.single.schema['required'] as List<Object?>;
+      final JsonMap result = CatalogContext.loadItems(catalog, <String>[
+        'Card',
+      ]);
+      final schema = itemsOf(result).single['schema']! as JsonMap;
+      final required = schema['required']! as List<Object?>;
 
       expect(required, contains('child'));
     });
 
     test('loaded schema rejects additional properties', () {
-      final LoadCatalogItemsResult result = CatalogContext.loadItems(
-        catalog,
-        <String>['Card'],
-      );
+      final JsonMap result = CatalogContext.loadItems(catalog, <String>[
+        'Card',
+      ]);
+      final schema = itemsOf(result).single['schema']! as JsonMap;
 
-      expect(result.items.single.schema['additionalProperties'], isFalse);
+      expect(schema['additionalProperties'], isFalse);
     });
 
     test('rewrites common-types refs in loaded schemas', () {
@@ -138,24 +282,24 @@ void main() {
         referencedItem,
       ], catalogId: 'referenced_catalog');
 
-      final LoadCatalogItemsResult result = CatalogContext.loadItems(
+      final JsonMap result = CatalogContext.loadItems(
         referencedCatalog,
         <String>['Referenced'],
       );
-      final encodedSchema = result.items.single.schema.toString();
+      final encodedSchema = itemsOf(result).single['schema'].toString();
 
       expect(encodedSchema, contains(r'common_types.json#/$defs/Action'));
       expect(encodedSchema, isNot(contains('https://a2ui.org')));
     });
 
     test('parses example JSON when valid', () {
-      final LoadCatalogItemsResult result = CatalogContext.loadItems(
-        catalog,
-        <String>['Card'],
-      );
+      final JsonMap result = CatalogContext.loadItems(catalog, <String>[
+        'Card',
+      ]);
+      final examples = itemsOf(result).single['examples']! as List<Object?>;
 
-      expect(result.items.single.examples, hasLength(1));
-      expect(result.items.single.examples.first, isA<List<Object?>>());
+      expect(examples, hasLength(1));
+      expect(examples.first, isA<List<Object?>>());
     });
 
     test('identifies the item and example when example JSON is invalid', () {
@@ -198,16 +342,33 @@ void main() {
     });
 
     test('preserves request order and removes duplicates', () {
-      final LoadCatalogItemsResult result = CatalogContext.loadItems(
-        catalog,
-        <String>['Button', 'Card', 'Button'],
-      );
+      final JsonMap result = CatalogContext.loadItems(catalog, <String>[
+        'Button',
+        'Card',
+        'Button',
+      ]);
 
-      expect(result.items.map((CatalogItemDetails e) => e.name), <String>[
+      expect(itemsOf(result).map((JsonMap e) => e['name']), <String>[
         'Button',
         'Card',
       ]);
     });
+
+    test(
+      'supports case-insensitive lookup and deduplicates canonical names',
+      () {
+        final JsonMap result = CatalogContext.loadItems(catalog, <String>[
+          'card',
+          'TEXT',
+          'Card',
+        ]);
+
+        expect(itemsOf(result).map((JsonMap e) => e['name']), <String>[
+          'Card',
+          'Text',
+        ]);
+      },
+    );
 
     test('throws for unknown catalog item', () {
       expect(
@@ -221,26 +382,155 @@ void main() {
     });
 
     test('accepts an empty request', () {
-      final LoadCatalogItemsResult result = CatalogContext.loadItems(
+      final JsonMap result = CatalogContext.loadItems(
         catalog,
         const <String>[],
       );
 
-      expect(result.items, isEmpty);
+      expect(itemsOf(result), isEmpty);
     });
 
     test('details carry only name, description, schema, and examples', () {
-      final LoadCatalogItemsResult result = CatalogContext.loadItems(
-        catalog,
-        <String>['Card'],
-      );
-      final Iterable<String> keys = result.items.single.toJson().keys;
+      final JsonMap result = CatalogContext.loadItems(catalog, <String>[
+        'Card',
+      ]);
+      final Iterable<String> keys = itemsOf(result).single.keys;
 
       expect(
         keys,
         containsAll(<String>['name', 'description', 'schema', 'examples']),
       );
       expect(keys, hasLength(4));
+    });
+
+    test(
+      'loads all BasicCatalogItems and validates examples against schemas',
+      () {
+        final Catalog basicCatalog = BasicCatalogItems.asCatalog();
+        final List<String> allNames = basicCatalog.items
+            .map((CatalogItem item) => item.name)
+            .toList();
+        final JsonMap result = CatalogContext.loadItems(basicCatalog, allNames);
+        final List<JsonMap> loadedItems = itemsOf(result);
+
+        expect(loadedItems, hasLength(allNames.length));
+        final byName = <String, JsonMap>{
+          for (final JsonMap item in loadedItems) item['name']! as String: item,
+        };
+
+        for (final item in loadedItems) {
+          final itemName = item['name']! as String;
+          final examples = item['examples']! as List<Object?>;
+          for (final example in examples) {
+            expect(example, isA<List<Object?>>());
+            for (final rawComponent in example! as List<Object?>) {
+              final component = rawComponent! as Map<String, Object?>;
+              final componentName = component['component'] as String;
+              final JsonMap? target = byName[componentName];
+              expect(
+                target,
+                isNotNull,
+                reason:
+                    'Example in $itemName references unknown component '
+                    '$componentName',
+              );
+              final targetSchema = target!['schema']! as JsonMap;
+              final properties =
+                  targetSchema['properties']! as Map<String, Object?>;
+              final required = targetSchema['required']! as List<Object?>;
+              expect(
+                component.keys,
+                containsAll(required),
+                reason:
+                    'Example component $componentName in $itemName is '
+                    'missing required properties',
+              );
+              for (final String key in component.keys) {
+                expect(
+                  properties.keys,
+                  contains(key),
+                  reason:
+                      'Example component $componentName in $itemName uses '
+                      'undeclared property "$key"',
+                );
+              }
+            }
+          }
+        }
+      },
+    );
+  });
+
+  group('CatalogContext.executeTool', () {
+    test('executes tool call from raw args map', () {
+      final JsonMap result = CatalogContext.executeTool(
+        catalog,
+        <String, Object?>{
+          'items': <Object?>['Card', 'button'],
+        },
+      );
+
+      expect(itemsOf(result).map((JsonMap e) => e['name']), <String>[
+        'Card',
+        'Button',
+      ]);
+    });
+
+    test('accepts empty items list and returns empty items map', () {
+      final JsonMap result = CatalogContext.executeTool(
+        catalog,
+        <String, Object?>{'items': <Object?>[]},
+      );
+
+      expect(itemsOf(result), isEmpty);
+      expect(result['catalogId'], 'test_catalog');
+    });
+
+    test('ignores extraneous arguments in args map', () {
+      final JsonMap result = CatalogContext.executeTool(
+        catalog,
+        <String, Object?>{
+          'items': <Object?>['Card'],
+          'extraArgument': 'should_be_ignored',
+          'explanation': 'Fetching card for UI rendering',
+          'turn': 3,
+        },
+      );
+
+      expect(itemsOf(result).map((JsonMap e) => e['name']), <String>['Card']);
+      expect(result['catalogId'], 'test_catalog');
+    });
+
+    test('accepts empty items list with extraneous arguments', () {
+      final JsonMap result = CatalogContext.executeTool(
+        catalog,
+        <String, Object?>{'items': <Object?>[], 'extraArg': 42},
+      );
+
+      expect(itemsOf(result), isEmpty);
+      expect(result['catalogId'], 'test_catalog');
+    });
+
+    test('throws ArgumentError when items key is missing or not a list', () {
+      expect(
+        () => CatalogContext.executeTool(catalog, const <String, Object?>{}),
+        throwsArgumentError,
+      );
+      expect(
+        () => CatalogContext.executeTool(catalog, const <String, Object?>{
+          'items': 'Card',
+        }),
+        throwsArgumentError,
+      );
+    });
+
+    test('throws ArgumentError when items contains a non-string entry', () {
+      expect(
+        () => CatalogContext.executeTool(catalog, const <String, Object?>{
+          'items': <Object?>['Card', 42],
+        }),
+        throwsArgumentError,
+      );
     });
   });
 

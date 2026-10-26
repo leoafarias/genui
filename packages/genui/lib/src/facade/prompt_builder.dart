@@ -66,14 +66,17 @@ the user can indicate that they are done providing information.
       'Use JSON text blocks.\n'
       'Ensure all JSON is valid and fenced with ```json ... ```.';
 
-  /// Carve-out from the no-tools-for-UI rule for the `loadCatalogItems`
-  /// tool used by [CatalogPromptMode.incremental].
+  /// Generates the prompt fragment permitting the `loadCatalogItems` tool in
+  /// [CatalogPromptMode.incremental].
   ///
-  /// Auto-injected by the prompt builder in [CatalogPromptMode.incremental];
-  /// callers do not need to add it manually.
+  /// Informs the model that calling `loadCatalogItems` is context loading
+  /// rather than UI generation, allowing it alongside general UI tool
+  /// restrictions.
   ///
-  /// [prefix] is a prefix to be added to the prompt.
-  /// Is useful when you want to emphasize the importance of this fragment.
+  /// Automatically injected by [PromptBuilder] in
+  /// [CatalogPromptMode.incremental]; callers do not need to add it manually.
+  ///
+  /// [prefix] is prepended to the fragment to emphasize its importance.
   static String incrementalCatalogToolPolicy({String prefix = ''}) =>
       '$prefix${CatalogContext.loadCatalogItemsTool.name} is available to load '
       'A2UI catalog item schemas and examples. Calling it is context loading, '
@@ -84,17 +87,18 @@ the user can indicate that they are done providing information.
 
 /// How the catalog is presented to the model in the system prompt.
 enum CatalogPromptMode {
-  /// Inline the full A2UI schema, including every catalog item schema in the
+  /// Inlines the full A2UI schema, including every catalog item schema in the
   /// `updateComponents` `oneOf`.
   fullSchema,
 
-  /// Show a compact catalog manifest up front and let the model load exact
+  /// Shows a compact catalog manifest up front and lets the model load exact
   /// component schemas and examples on demand via the `loadCatalogItems`
   /// tool.
   ///
-  /// Callers MUST register that tool (wired to [CatalogContext.loadItems])
-  /// before selecting this mode, or the model will be instructed to call a
-  /// tool the host has not registered.
+  /// Callers must register [CatalogContext.loadCatalogItemsTool] (wired to
+  /// [CatalogContext.executeTool] or [CatalogContext.loadItems]) before
+  /// selecting this mode, or the model will be instructed to call a tool the
+  /// host has not registered.
   incremental,
 }
 
@@ -103,6 +107,8 @@ enum CatalogPromptMode {
 // and produce a final [ChatMessage].
 // TODO: consider supporting non-text parts in system prompt.
 abstract class PromptBuilder {
+  /// The default prefix prepended to critical prompt instructions to
+  /// emphasize their importance to the model.
   static const String defaultImportancePrefix = 'IMPORTANT: ';
 
   const PromptBuilder._();
@@ -134,6 +140,14 @@ abstract class PromptBuilder {
     );
   }
 
+  /// Creates a custom prompt builder.
+  ///
+  /// The builder allows configuring custom [allowedOperations] (such as
+  /// creating, updating, or deleting surfaces) and [technicalPossibilities]
+  /// (such as code execution, tool call, or function call permissions).
+  ///
+  /// Use [catalogPromptMode] to choose between inlining the full schema or
+  /// loading component schemas on demand via [CatalogPromptMode.incremental].
   static PromptBuilder custom({
     required Catalog catalog,
     required SurfaceOperations allowedOperations,
@@ -166,6 +180,13 @@ abstract class PromptBuilder {
     );
   }
 
+  /// Returns the system prompt as an iterable of sections.
+  ///
+  /// Each section represents an instruction block, technical restriction,
+  /// schema definition, or catalog fragment intended for the model.
+  ///
+  /// To obtain the entire prompt joined as a single string, use
+  /// [systemPromptJoined].
   Iterable<String> systemPrompt();
 
   /// Returns the system prompt as a single string.
@@ -248,12 +269,41 @@ $properties
   }
 }
 
+/// Technical capabilities and restrictions communicated to the model in the
+/// system prompt.
+///
+/// Disabling a capability adds prompt instructions directing the model not to
+/// rely on that capability (e.g., prohibiting code execution or tool calling
+/// for UI generation).
 final class TechnicalPossibilities {
+  /// Whether the model is permitted to execute code.
+  ///
+  /// When `false`, the system prompt instructs the model that it cannot
+  /// execute code and must perform calculations directly.
   final bool codeExecution;
+
+  /// Whether the model is permitted to use tools for UI generation.
+  ///
+  /// When `false`, the system prompt instructs the model not to use tools for
+  /// UI generation.
   final bool toolCall;
+
+  /// Whether the model is permitted to use function calls for UI generation.
+  ///
+  /// When `false`, the system prompt instructs the model not to use function
+  /// calls for UI generation.
   final bool functionCall;
+
+  /// The prefix prepended to technical restriction statements in the prompt.
   final String importancePrefix;
 
+  /// Creates a new [TechnicalPossibilities] configuration.
+  ///
+  /// When [codeExecution], [toolCall], or [functionCall] are `false`, the
+  /// builder generates instructions informing the model that the corresponding
+  /// capability is unavailable for UI generation.
+  ///
+  /// [importancePrefix] defaults to [PromptBuilder.defaultImportancePrefix].
   const TechnicalPossibilities({
     this.codeExecution = false,
     this.toolCall = false,
@@ -296,8 +346,15 @@ final class TechnicalPossibilities {
   }
 }
 
-/// Pieces of prompt that defines allowed surface operations.
+/// Allowed surface operations communicated to the model in the system prompt.
+///
+/// Dictates which A2UI operations (creating new surfaces, updating components,
+/// deleting surfaces, or updating data models) the model is permitted to
+/// perform.
 final class SurfaceOperations {
+  /// Creates a configuration with the specified surface operations.
+  ///
+  /// At least one of [create], [update], or [delete] must be `true`.
   SurfaceOperations({
     this.create = false,
     this.update = false,
@@ -307,18 +364,55 @@ final class SurfaceOperations {
          create || update || delete,
          'At least one operation must be enabled.',
        );
+
+  /// Creates a configuration allowing only surface creation.
+  ///
+  /// When [dataModel] is `true`, data model updates via `updateDataModel` are
+  /// also permitted.
   SurfaceOperations.createOnly({required bool dataModel})
     : this(create: true, update: false, delete: false, dataModel: dataModel);
+
+  /// Creates a configuration allowing only surface updates.
+  ///
+  /// When [dataModel] is `true`, data model updates via `updateDataModel` are
+  /// also permitted.
   SurfaceOperations.updateOnly({required bool dataModel})
     : this(create: false, update: true, delete: false, dataModel: dataModel);
+
+  /// Creates a configuration allowing both surface creation and updates.
+  ///
+  /// When [dataModel] is `true`, data model updates via `updateDataModel` are
+  /// also permitted.
   SurfaceOperations.createAndUpdate({required bool dataModel})
     : this(create: true, update: true, delete: false, dataModel: dataModel);
+
+  /// Creates a configuration allowing all surface operations.
+  ///
+  /// Enables surface creation, updates, and deletion. When [dataModel] is
+  /// `true`, data model updates via `updateDataModel` are also permitted.
   SurfaceOperations.all({required bool dataModel})
     : this(create: true, update: true, delete: true, dataModel: dataModel);
 
+  /// Whether the model is permitted to create new surfaces.
+  ///
+  /// When `true`, enables emitting `createSurface` and initial
+  /// `updateComponents` messages.
   final bool create;
+
+  /// Whether the model is permitted to update existing surfaces.
+  ///
+  /// When `true`, enables emitting `updateComponents` messages for existing
+  /// surfaces.
   final bool update;
+
+  /// Whether the model is permitted to delete surfaces.
+  ///
+  /// When `true`, enables emitting `deleteSurface` messages.
   final bool delete;
+
+  /// Whether the model is permitted to update the client data model.
+  ///
+  /// When `true`, enables emitting `updateDataModel` messages.
   final bool dataModel;
 
   late final _operations = <ProtocolMessages>{
@@ -522,12 +616,12 @@ final class _BasicPromptBuilder extends PromptBuilder {
   /// A compact catalog manifest plus instructions to load item details on
   /// demand through the `loadCatalogItems` tool.
   String _incrementalCatalogPrompt() {
-    final CatalogManifest manifest = CatalogContext.manifest(catalog);
+    final JsonMap manifest = CatalogContext.manifest(catalog);
     final String encodedManifest = const JsonEncoder.withIndent(
       '  ',
-    ).convert(manifest.toJson());
+    ).convert(manifest);
     final String toolName = CatalogContext.loadCatalogItemsTool.name;
-    final String exampleItemNames = manifest.items
+    final String exampleItemNames = catalog.items
         .take(2)
         .map((item) => jsonEncode(item.name))
         .join(', ');
@@ -539,7 +633,8 @@ available components and a short description of each, but NOT their full schemas
 
 Before emitting any A2UI, call the $toolName tool (for example,
 $loadItemsInputExample) to load the exact schema and examples for the components
-you need.
+you need. Do not reload components you already loaded with $toolName in an
+earlier turn.
 
 In updateComponents.components, each component is an object with:
 - id: a unique component id. Use "root" for the root component.
@@ -569,11 +664,10 @@ $encodedManifest
 
     if (functionSchemas.functions.isNotEmpty) {
       catalogJson['functions'] = functionSchemas.functions;
-      defs['anyFunction'] = functionSchemas.anyFunction;
     } else {
       catalogJson.remove('functions');
-      defs['anyFunction'] = functionSchemas.anyFunction;
     }
+    defs['anyFunction'] = functionSchemas.anyFunction;
 
     final String json = const JsonEncoder.withIndent('  ').convert(catalogJson);
     return json.replaceAll(commonTypesSchemaId, 'common_types.json');
