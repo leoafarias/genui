@@ -1,4 +1,93 @@
-# `genui` Changelog
+# [genui](https://pub.dev/packages/genui) Changelog
+
+## 0.10.6
+
+- **Refactoring**: `a2ui_core` is inlined into this package.
+- **BREAKING**: genui no longer depends on `package:a2ui_core`. It runs on its
+  own copy of `a2ui_core` 0.1.0, exported as `package:genui/a2ui_core.dart`.
+  Import that library instead of `package:a2ui_core/a2ui_core.dart` for the
+  messages and other A2UI types you pass to or get from genui: types from
+  `package:a2ui_core` are no longer accepted.
+- **Internal**: Ignore the deprecation of `package:flutter/material.dart` on
+  Flutter beta until genui can migrate to `package:material_ui` (#1062).
+
+## 0.10.5
+
+- **Announcement**: `genui` is being redesigned as a set of modular packages:
+  [`a2ui_core`](https://pub.dev/packages/a2ui_core),
+  [`a2ui_agent`](https://pub.dev/packages/a2ui_agent), and
+  [`a2ui_flutter`](https://pub.dev/packages/a2ui_flutter).
+- Added `AsynchronousClientFunction` base class for single-shot asynchronous
+  client functions returning a `Future` (via `executeAsync`), complementing
+  `SynchronousClientFunction` (`executeSync`).
+- **Fix**: Validation `checks` on `CheckBox`, `Slider`, and `ChoicePicker` now fail when their condition is false, and show the check's `message` instead of a generic "Invalid value".
+- **Fix**: `and`/`or`/`not` logical functions now evaluate nested bindings and function calls inside `values`/`value`, so a failing nested check fails the rule and malformed condition shapes log a warning.
+- **Behavior change**: Conditions use truthiness instead of a null check. `0`, `''`, `[]`, `{}` and unknown functions evaluate to `false`, and malformed condition expressions log a warning.
+- **Behavior change**: `resolve()` and `resolveContext()` recursively resolve dynamic values inside lists.
+- **Fix**: Made `Slider` continuous (`divisions: null`) by default, preventing assertion crashes on sub-unit ranges, fixing thumb value text formatting and literal value fallback, and handling inverted ranges (`max < min`).
+- **Fix**: `CheckBox` shows a literal `value` again. It bound the checkbox to a
+  data model path and never read the literal the model sent, so a component
+  that said the setting was on rendered unchecked, announced itself unchecked,
+  and logged nothing. `Slider` and `TextField` already fall back to their
+  literal until the path holds something; this does the same.
+- **Fix**: Corrected email validation regex in `EmailFunction` to match the end-of-string anchor instead of a literal `$` character.
+- **Fix**: Added accessible names to the controls of the basic catalog: the
+  play buttons and both sliders in `AudioPlayer` and `Video`, and `Slider`'s
+  own label. They had none, so a screen reader announced "button" or a bare
+  percentage with nothing to say what it belonged to. `Slider` already drew
+  its `label` above the track, but as a separate node: the label now names the
+  control, merged onto the node that carries the value and the actions, and
+  the caption is no longer read a second time.
+- **Feature**: A component's `accessibility` attributes now reach the semantics
+  tree. `ComponentCommon` gives every A2UI component an optional `label` and
+  `description`; both were accepted and then dropped, so a screen reader
+  announced the visible text where the agent had asked for something else.
+  `Surface` now applies them as it builds each component, which covers every
+  catalog rather than one component at a time. Both are `DynamicString`s and
+  resolve through `BoundString`, so a label bound to a path follows the data
+  model. A component without the attributes is left exactly as it was.
+- **Feature**: The label replaces what the component announces for itself,
+  rather than being added to it, which is what the v1.0 spec describes it as.
+  Each child's configuration is cleared through `childConfigurationsDelegate`
+  before it merges up, so the node keeps the child's role and actions and
+  announces only the agent's name. A child that builds a semantics node of its
+  own is never offered for that, so its own label survives and the agent's is
+  announced ahead of it; every Material control does that, and those take the
+  label themselves instead.
+
+
+## 0.10.4
+
+- **Fix**: `Image` now takes the catalog's `description` property and announces it. The property is what the basic
+  catalog defines for accessibility text, and `web_core` declares it, but genui's schema did not have it, so the text
+  an agent sent was accepted and dropped. An image has nothing inside it to infer a name from, so the result was an
+  unnamed node that assistive technology did not even report as an image. The value is a `DynamicString`, so a path
+  or a function call resolves like any other property.
+
+## 0.10.3
+
+- Updated `basicCatalogId` to point to the canonical URL: `https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json`.
+- Introduced `catalogIdAliases` in `Catalog` model to support alternate URLs (like the legacy/non-canonical one) for graceful backwards compatibility.
+- Augmented `SurfaceController` so that the protocol processor successfully processes both canonical and secondary aliases transparently.
+- Fixed `PluralizeFunction` to use `Intl.pluralLogic` instead of `Intl.plural` to
+  avoid message extraction errors when arguments are dynamic runtime
+  expressions.
+
+## 0.10.2
+
+- Fixed `A2uiTransportAdapter.incomingText` trimming every streamed chunk, which
+  made words run together when chunks were concatenated.
+
+- Added examples of how to use TextField.
+
+- Fixed `TextField` variants: `longText` now grows to fit multiple lines,
+  `number` now rejects non-numeric input, and the `obscured`
+  example now sets `variant` so that it is actually obscured.
+
+- `TextField.validationRegexp` is now enforced: the value has to match the
+  pattern in full, an empty field is exempt, and a value that does not match
+  shows an error and blocks `onSubmittedAction`. It was previously accepted and
+  ignored.
 
 ## 0.10.1
 

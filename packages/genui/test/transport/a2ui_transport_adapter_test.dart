@@ -4,7 +4,7 @@
 
 import 'dart:async';
 
-import 'package:a2ui_core/a2ui_core.dart' as core;
+import 'package:genui/a2ui_core.dart' as core;
 import 'package:genui/src/transport/a2ui_transport_adapter.dart';
 import 'package:test/test.dart';
 
@@ -26,6 +26,16 @@ void main() {
         emitsInOrder(['Hello']),
       );
       transportAdapter.addChunk('Hello');
+      await textFuture;
+    });
+
+    test('incomingText preserves chunk whitespace', () async {
+      final Future<dynamic> textFuture = expectLater(
+        transportAdapter.incomingText,
+        emitsInOrder(['a variety of friendly ', 'spots']),
+      );
+      transportAdapter.addChunk('a variety of friendly ');
+      transportAdapter.addChunk('spots');
       await textFuture;
     });
 

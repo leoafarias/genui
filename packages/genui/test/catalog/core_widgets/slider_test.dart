@@ -2,50 +2,64 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+// ignore: deprecated_member_use, see https://github.com/a2ui-project/a2ui/issues/3235
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:genui/genui.dart';
 
 import '../../test_infra/message_builders.dart';
 
+Future<SurfaceController> _pumpSlider(
+  WidgetTester tester, {
+  Map<String, Object?> properties = const {},
+  double? initialModelValue,
+}) async {
+  final surfaceController = SurfaceController(
+    catalogs: [
+      Catalog([BasicCatalogItems.slider], catalogId: 'test_catalog'),
+    ],
+  );
+  const surfaceId = 'testSurface';
+  final List<JsonMap> components = [
+    component(id: 'root', type: 'Slider', properties: properties),
+  ];
+  surfaceController.handleMessage(
+    updateComponents(surfaceId: surfaceId, components: components),
+  );
+  surfaceController.handleMessage(
+    createSurface(surfaceId: surfaceId, catalogId: 'test_catalog'),
+  );
+  if (initialModelValue != null && properties['value'] is Map) {
+    final path = (properties['value'] as Map)['path'] as String?;
+    if (path != null) {
+      surfaceController
+          .contextFor(surfaceId)
+          .dataModel
+          .update(DataPath(path), initialModelValue);
+    }
+  }
+
+  await tester.pumpWidget(
+    MaterialApp(
+      home: Scaffold(
+        body: Surface(surfaceContext: surfaceController.contextFor(surfaceId)),
+      ),
+    ),
+  );
+  await tester.pumpAndSettle();
+  return surfaceController;
+}
+
 void main() {
   testWidgets('Slider widget renders and handles changes', (
     WidgetTester tester,
   ) async {
-    final surfaceController = SurfaceController(
-      catalogs: [
-        Catalog([BasicCatalogItems.slider], catalogId: 'test_catalog'),
-      ],
-    );
-    const surfaceId = 'testSurface';
-    final List<JsonMap> components = [
-      component(
-        id: 'root',
-        type: 'Slider',
-        properties: {
-          'value': {'path': '/myValue'},
-        },
-      ),
-    ];
-    surfaceController.handleMessage(
-      updateComponents(surfaceId: surfaceId, components: components),
-    );
-    surfaceController.handleMessage(
-      createSurface(surfaceId: surfaceId, catalogId: 'test_catalog'),
-    );
-    surfaceController
-        .contextFor(surfaceId)
-        .dataModel
-        .update(DataPath('/myValue'), 0.5);
-
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: Surface(
-            surfaceContext: surfaceController.contextFor(surfaceId),
-          ),
-        ),
-      ),
+    final SurfaceController surfaceController = await _pumpSlider(
+      tester,
+      properties: {
+        'value': {'path': '/myValue'},
+      },
+      initialModelValue: 0.5,
     );
 
     final Slider slider = tester.widget<Slider>(find.byType(Slider));
@@ -54,7 +68,7 @@ void main() {
     await tester.drag(find.byType(Slider), const Offset(100, 0));
     expect(
       surfaceController
-          .contextFor(surfaceId)
+          .contextFor('testSurface')
           .dataModel
           .getValue<double>(DataPath('/myValue')),
       greaterThan(0.5),
@@ -62,32 +76,59 @@ void main() {
   });
 
   testWidgets('Slider widget renders label', (WidgetTester tester) async {
-    final surfaceController = SurfaceController(
-      catalogs: [
-        Catalog([BasicCatalogItems.slider], catalogId: 'test_catalog'),
-      ],
+    await _pumpSlider(
+      tester,
+      properties: {
+        'value': {'path': '/myValue'},
+        'label': 'Volume',
+      },
+      initialModelValue: 0.5,
     );
-    const surfaceId = 'testSurface';
+
+    expect(find.text('Volume'), findsOneWidget);
+  });
+
+  testWidgets('Slider validation checks show error message when failing', (
+    WidgetTester tester,
+  ) async {
+    final surfaceController = SurfaceController(
+      catalogs: [BasicCatalogItems.asCatalog()],
+    );
+    addTearDown(surfaceController.dispose);
+    const surfaceId = 'validationTest';
+    surfaceController.handleMessage(
+      updateDataModel(surfaceId: surfaceId, path: DataPath('/val'), value: 0.2),
+    );
+
     final List<JsonMap> components = [
       component(
         id: 'root',
         type: 'Slider',
         properties: {
-          'value': {'path': '/myValue'},
           'label': 'Volume',
+          'value': {'path': '/val'},
+          'checks': [
+            {
+              'message': 'Must be at least 0.5',
+              'condition': {
+                'call': 'numeric',
+                'args': {
+                  'value': {'path': '/val'},
+                  'min': 0.5,
+                },
+              },
+            },
+          ],
         },
       ),
     ];
+
     surfaceController.handleMessage(
       updateComponents(surfaceId: surfaceId, components: components),
     );
     surfaceController.handleMessage(
-      createSurface(surfaceId: surfaceId, catalogId: 'test_catalog'),
+      createSurface(surfaceId: surfaceId, catalogId: basicCatalogId),
     );
-    surfaceController
-        .contextFor(surfaceId)
-        .dataModel
-        .update(DataPath('/myValue'), 0.5);
 
     await tester.pumpWidget(
       MaterialApp(
@@ -98,7 +139,133 @@ void main() {
         ),
       ),
     );
+    await tester.pumpAndSettle();
 
-    expect(find.text('Volume'), findsOneWidget);
+    expect(find.text('Must be at least 0.5'), findsOneWidget);
+
+    surfaceController.handleMessage(
+      updateDataModel(surfaceId: surfaceId, path: DataPath('/val'), value: 0.8),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Must be at least 0.5'), findsNothing);
   });
+
+  testWidgets('Slider widget is continuous (divisions is null) by default', (
+    WidgetTester tester,
+  ) async {
+    await _pumpSlider(
+      tester,
+      properties: {
+        'value': {'path': '/myValue'},
+      },
+      initialModelValue: 0.5,
+    );
+
+    final Slider slider = tester.widget<Slider>(find.byType(Slider));
+    expect(slider.divisions, isNull);
+    expect(slider.min, 0.0);
+    expect(slider.max, 1.0);
+    expect(slider.value, 0.5);
+  });
+
+  testWidgets('Slider widget does not crash on sub-unit ranges', (
+    WidgetTester tester,
+  ) async {
+    await _pumpSlider(
+      tester,
+      properties: {
+        'value': {'path': '/myValue'},
+        'min': 0.0,
+        'max': 0.5,
+      },
+      initialModelValue: 0.2,
+    );
+
+    expect(tester.takeException(), isNull);
+    final Slider slider = tester.widget<Slider>(find.byType(Slider));
+    expect(slider.divisions, isNull);
+    expect(slider.min, 0.0);
+    expect(slider.max, 0.5);
+    expect(slider.value, 0.2);
+  });
+
+  testWidgets(
+    'Slider widget displays literal value without data model binding',
+    (WidgetTester tester) async {
+      await _pumpSlider(
+        tester,
+        properties: {'value': 0.5, 'min': 0.0, 'max': 1.0},
+      );
+
+      final Slider slider = tester.widget<Slider>(find.byType(Slider));
+      expect(slider.value, 0.5);
+      expect(find.text('0.5'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'Slider widget formats whole numbers and decimal numbers correctly',
+    (WidgetTester tester) async {
+      final SurfaceController controller = await _pumpSlider(
+        tester,
+        properties: {
+          'value': {'path': '/myValue'},
+          'min': 0.0,
+          'max': 100.0,
+        },
+        initialModelValue: 10.0,
+      );
+
+      // Whole numbers should not display trailing .0
+      expect(find.text('10'), findsOneWidget);
+
+      // Decimal numbers should preserve fractional part without trailing zeroes
+      controller
+          .contextFor('testSurface')
+          .dataModel
+          .update(DataPath('/myValue'), 0.25);
+      await tester.pumpAndSettle();
+      expect(find.text('0.25'), findsOneWidget);
+
+      // Sub-unit / high precision values up to 6 decimals should be preserved
+      controller
+          .contextFor('testSurface')
+          .dataModel
+          .update(DataPath('/myValue'), 0.005);
+      await tester.pumpAndSettle();
+      expect(find.text('0.005'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'Slider widget clamps label display when initial value is out of bounds',
+    (WidgetTester tester) async {
+      await _pumpSlider(
+        tester,
+        properties: {'value': -5.0, 'min': 0.0, 'max': 10.0},
+      );
+
+      final Slider slider = tester.widget<Slider>(find.byType(Slider));
+      expect(slider.value, 0.0);
+      expect(find.text('0'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'Slider widget handles inverted range (max < min) by clamping to min',
+    (WidgetTester tester) async {
+      await _pumpSlider(
+        tester,
+        properties: {'value': 5.0, 'min': 10.0, 'max': 0.0},
+      );
+
+      expect(tester.takeException(), isNull);
+      final Slider slider = tester.widget<Slider>(find.byType(Slider));
+      expect(slider.min, 10.0);
+      expect(slider.max, 10.0);
+      expect(slider.value, 10.0);
+      expect(find.text('10'), findsOneWidget);
+    },
+  );
 }

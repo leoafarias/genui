@@ -2,15 +2,16 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+// ignore: deprecated_member_use, see https://github.com/a2ui-project/a2ui/issues/3235
 import 'package:flutter/material.dart';
 import 'package:json_schema_builder/json_schema_builder.dart';
 
 import '../../model/a2ui_schemas.dart';
 import '../../model/catalog_item.dart';
 import '../../model/data_model.dart';
+import '../../model/validation_helper.dart';
 import '../../primitives/simple_items.dart';
 import '../../widgets/widget_utilities.dart';
-import 'widget_helpers.dart';
 
 final _schema = S.object(
   description: 'A slider for selecting a value from a range.',
@@ -54,6 +55,15 @@ extension type _SliderData.fromMap(JsonMap _json) {
   }
 }
 
+String _formatSliderValue(num val) {
+  if (val == val.roundToDouble()) {
+    return val.toInt().toString();
+  }
+  final String fixed = val.toStringAsFixed(6);
+  final String trimmed = fixed.replaceAll(RegExp(r'\.?0+$'), '');
+  return trimmed.isEmpty ? '0' : trimmed;
+}
+
 /// A Material Design slider.
 ///
 /// This widget allows the user to select a value from a range by sliding a
@@ -89,6 +99,16 @@ final slider = CatalogItem(
           }
         }
 
+        final double min = sliderData.min;
+        final double max = sliderData.max < min ? min : sliderData.max;
+        final double currentVal = (effectiveValue ?? min).toDouble().clamp(
+          min,
+          max,
+        );
+
+        // The label is drawn above the track for someone looking at the
+        // screen. It has to name the slider as well, or a screen reader
+        // announces a value with nothing to say what it belongs to.
         final Widget sliderWidget = Padding(
           padding: const EdgeInsetsDirectional.only(end: 16.0),
           child: Row(
@@ -96,18 +116,17 @@ final slider = CatalogItem(
             children: [
               Expanded(
                 child: Slider(
-                  value: (effectiveValue ?? sliderData.min).toDouble(),
-                  min: sliderData.min,
-                  max: sliderData.max,
-                  divisions: (sliderData.max - sliderData.min).toInt(),
+                  value: currentVal,
+                  min: min,
+                  max: max,
                   onChanged: (newValue) {
                     itemContext.dataContext.update(DataPath(path), newValue);
                   },
                 ),
               ),
-              Text(
-                value?.toStringAsFixed(0) ?? sliderData.min.toStringAsFixed(0),
-              ),
+              // Excluded: the slider announces the same number as its own
+              // value, so read on its own this would be said twice.
+              ExcludeSemantics(child: Text(_formatSliderValue(currentVal))),
             ],
           ),
         );
@@ -116,25 +135,38 @@ final slider = CatalogItem(
           dataContext: itemContext.dataContext,
           value: sliderData.label,
           builder: (context, label) {
-            return StreamBuilder<bool>(
-              stream: itemContext.dataContext.evaluateConditionStream(
-                checksToExpression(sliderData.checks),
+            return StreamBuilder<String?>(
+              stream: ValidationHelper.validateStream(
+                sliderData.checks,
+                itemContext.dataContext,
               ),
-              initialData: true,
               builder: (context, snapshot) {
-                final bool isValid = snapshot.data ?? true;
-                final bool isError = !isValid;
+                final String? errorMessage = snapshot.data;
+                final isError = errorMessage != null;
 
                 final List<Widget> children = [
                   if (label != null)
                     Padding(
                       padding: const EdgeInsets.only(left: 16.0, bottom: 8.0),
-                      child: Text(
-                        label,
-                        style: Theme.of(context).textTheme.titleSmall,
+                      // Excluded because the slider announces the same label
+                      // below: read as a caption as well, a screen reader
+                      // user would hear it twice.
+                      child: ExcludeSemantics(
+                        child: Text(
+                          label,
+                          style: Theme.of(context).textTheme.titleSmall,
+                        ),
                       ),
                     ),
-                  sliderWidget,
+                  if (label == null)
+                    sliderWidget
+                  else
+                    // Merged so the name lands on the node that carries the
+                    // value and the actions. Left unmerged, the slider stays
+                    // a node of its own and still announces a bare number.
+                    MergeSemantics(
+                      child: Semantics(label: label, child: sliderWidget),
+                    ),
                 ];
 
                 if (isError) {
@@ -142,7 +174,7 @@ final slider = CatalogItem(
                     Padding(
                       padding: const EdgeInsets.only(left: 16.0, top: 4.0),
                       child: Text(
-                        'Invalid value',
+                        errorMessage,
                         style: TextStyle(
                           color: Theme.of(context).colorScheme.error,
                           fontSize: 12,

@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+// ignore: deprecated_member_use, see https://github.com/a2ui-project/a2ui/issues/3235
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:genui/genui.dart';
@@ -63,5 +64,170 @@ void main() {
           .getValue<bool>(DataPath('/myValue')),
       isFalse,
     );
+  });
+
+  testWidgets('CheckBox shows a literal value', (WidgetTester tester) async {
+    final surfaceController = SurfaceController(
+      catalogs: [
+        Catalog([BasicCatalogItems.checkBox], catalogId: 'test_catalog'),
+      ],
+    );
+    addTearDown(surfaceController.dispose);
+    const surfaceId = 'testSurface';
+
+    surfaceController.handleMessage(
+      updateComponents(
+        surfaceId: surfaceId,
+        components: [
+          component(
+            id: 'root',
+            type: 'CheckBox',
+            properties: {'label': 'Check me', 'value': true},
+          ),
+        ],
+      ),
+    );
+    surfaceController.handleMessage(
+      createSurface(surfaceId: surfaceId, catalogId: 'test_catalog'),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Surface(
+            surfaceContext: surfaceController.contextFor(surfaceId),
+          ),
+        ),
+      ),
+    );
+
+    expect(
+      tester.widget<CheckboxListTile>(find.byType(CheckboxListTile)).value,
+      isTrue,
+    );
+  });
+
+  testWidgets('CheckBox lets the data model replace the literal', (
+    WidgetTester tester,
+  ) async {
+    final surfaceController = SurfaceController(
+      catalogs: [
+        Catalog([BasicCatalogItems.checkBox], catalogId: 'test_catalog'),
+      ],
+    );
+    addTearDown(surfaceController.dispose);
+    const surfaceId = 'testSurface';
+
+    surfaceController.handleMessage(
+      updateComponents(
+        surfaceId: surfaceId,
+        components: [
+          component(
+            id: 'root',
+            type: 'CheckBox',
+            properties: {
+              'label': 'Check me',
+              'value': {'path': '/myValue'},
+            },
+          ),
+        ],
+      ),
+    );
+    surfaceController.handleMessage(
+      createSurface(surfaceId: surfaceId, catalogId: 'test_catalog'),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Surface(
+            surfaceContext: surfaceController.contextFor(surfaceId),
+          ),
+        ),
+      ),
+    );
+
+    // A binding that has not resolved is not a literal, so the checkbox is
+    // unchecked until the path holds something.
+    expect(
+      tester.widget<CheckboxListTile>(find.byType(CheckboxListTile)).value,
+      isFalse,
+    );
+
+    surfaceController
+        .contextFor(surfaceId)
+        .dataModel
+        .update(DataPath('/myValue'), true);
+    await tester.pumpAndSettle();
+
+    expect(
+      tester.widget<CheckboxListTile>(find.byType(CheckboxListTile)).value,
+      isTrue,
+    );
+  });
+
+  testWidgets('CheckBox validation checks show error message when failing', (
+    WidgetTester tester,
+  ) async {
+    final surfaceController = SurfaceController(
+      catalogs: [BasicCatalogItems.asCatalog()],
+    );
+    addTearDown(surfaceController.dispose);
+    const surfaceId = 'validationTest';
+    surfaceController.handleMessage(
+      updateDataModel(
+        surfaceId: surfaceId,
+        path: DataPath('/accepted'),
+        value: false,
+      ),
+    );
+
+    final List<JsonMap> components = [
+      component(
+        id: 'root',
+        type: 'CheckBox',
+        properties: {
+          'label': 'I agree',
+          'value': {'path': '/accepted'},
+          'checks': [
+            {
+              'message': 'You must accept the terms',
+              'condition': {'path': '/accepted'},
+            },
+          ],
+        },
+      ),
+    ];
+
+    surfaceController.handleMessage(
+      updateComponents(surfaceId: surfaceId, components: components),
+    );
+    surfaceController.handleMessage(
+      createSurface(surfaceId: surfaceId, catalogId: basicCatalogId),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Surface(
+            surfaceContext: surfaceController.contextFor(surfaceId),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('You must accept the terms'), findsOneWidget);
+
+    surfaceController.handleMessage(
+      updateDataModel(
+        surfaceId: surfaceId,
+        path: DataPath('/accepted'),
+        value: true,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('You must accept the terms'), findsNothing);
   });
 }

@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+// ignore: deprecated_member_use, see https://github.com/a2ui-project/a2ui/issues/3235
 import 'package:flutter/material.dart';
 
 import '../../model/catalog_item.dart';
@@ -138,20 +139,4 @@ Widget buildWeightedChild({
     return KeyedSubtree(key: key, child: childWidget);
   }
   return childWidget;
-}
-
-/// Converts a list of validation checks into a single expression that evaluates
-/// to true if all checks pass.
-Object? checksToExpression(List<JsonMap>? checks) {
-  if (checks == null || checks.isEmpty) {
-    return true;
-  }
-
-  // Combine all checks into a single 'and' condition
-  return {
-    'functionCall': {
-      'call': 'and',
-      'args': {'values': checks.map((c) => c['condition']).toList()},
-    },
-  };
 }

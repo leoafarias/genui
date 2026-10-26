@@ -2,12 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:a2ui_core/a2ui_core.dart' as core;
 import 'package:collection/collection.dart';
+// ignore: deprecated_member_use, see https://github.com/a2ui-project/a2ui/issues/3235
 import 'package:flutter/material.dart';
 import 'package:json_schema_builder/json_schema_builder.dart';
 import 'package:meta/meta.dart' show internal;
 
+import '../a2ui_core/a2ui_core.dart' as core;
 import '../primitives/constants.dart';
 import '../primitives/logging.dart';
 import '../primitives/simple_items.dart';
@@ -35,6 +36,7 @@ interface class Catalog {
     this.items, {
     this.functions = const [],
     this.catalogId,
+    this.catalogIdAliases = const [],
     this.systemPromptFragments = const [],
   });
 
@@ -50,6 +52,9 @@ interface class Catalog {
   /// e.g. 'com.example.my_catalog'.
   final String? catalogId;
 
+  /// Alternate catalog IDs that should also resolve to this catalog.
+  final List<String> catalogIdAliases;
+
   /// Instructions for UI generation.
   ///
   /// This can include explanation when to use which catalog items.
@@ -63,6 +68,7 @@ interface class Catalog {
     List<CatalogItem>? newItems,
     List<ClientFunction>? newFunctions,
     String? catalogId,
+    List<String>? catalogIdAliases,
     List<String>? systemPromptFragments,
   }) {
     final Map<String, CatalogItem> itemsByName = {
@@ -85,6 +91,7 @@ interface class Catalog {
       itemsByName.values,
       functions: functionsByName.values,
       catalogId: catalogId ?? this.catalogId,
+      catalogIdAliases: catalogIdAliases ?? this.catalogIdAliases,
       systemPromptFragments:
           systemPromptFragments ?? this.systemPromptFragments,
     );
@@ -96,6 +103,7 @@ interface class Catalog {
     Iterable<CatalogItem>? itemsToRemove,
     Iterable<ClientFunction>? functionsToRemove,
     String? catalogId,
+    List<String>? catalogIdAliases,
     List<String>? systemPromptFragments,
   }) {
     List<CatalogItem> updatedItems = items.toList();
@@ -122,6 +130,7 @@ interface class Catalog {
       updatedItems,
       functions: updatedFunctions,
       catalogId: catalogId ?? this.catalogId,
+      catalogIdAliases: catalogIdAliases ?? this.catalogIdAliases,
       systemPromptFragments:
           systemPromptFragments ?? this.systemPromptFragments,
     );
@@ -170,6 +179,11 @@ interface class Catalog {
   /// all use this, so an inline catalog's id cannot diverge between them.
   @internal
   String get effectiveCatalogId => catalogId ?? 'inline_catalog_$hashCode';
+
+  /// Whether this catalog matches [id], either as its canonical ID or one of
+  /// its [catalogIdAliases].
+  bool matchesId(String id) =>
+      effectiveCatalogId == id || catalogIdAliases.contains(id);
 
   /// Generates a JSON map suitable for inclusion in an inline catalog array
   /// within `A2UiClientCapabilities`.
@@ -410,3 +424,25 @@ core.Catalog<core.ComponentApi> coreCatalogFor(Catalog catalog) =>
           .map<core.ComponentApi>(_CatalogItemComponentApi.new)
           .toList(growable: false),
     );
+
+/// Builds the `a2ui_core` [core.Catalog] instances for [catalog] and all of its
+/// [Catalog.catalogIdAliases], used when constructing a [core.MessageProcessor]
+/// so `a2ui_core` can resolve surfaces whether they specify the canonical ID
+/// or any of its aliases.
+@internal
+List<core.Catalog<core.ComponentApi>> allCoreCatalogsFor(Catalog catalog) {
+  final List<core.ComponentApi> components = catalog.items
+      .map<core.ComponentApi>(_CatalogItemComponentApi.new)
+      .toList(growable: false);
+  // A `Set` keeps insertion order (canonical ID first) while dropping aliases
+  // that repeat the canonical ID or each other, so `a2ui_core` never sees two
+  // catalogs registered under the same ID.
+  final Set<String> ids = {
+    catalog.effectiveCatalogId,
+    ...catalog.catalogIdAliases,
+  };
+  return [
+    for (final String id in ids)
+      core.Catalog<core.ComponentApi>(id: id, components: components),
+  ];
+}

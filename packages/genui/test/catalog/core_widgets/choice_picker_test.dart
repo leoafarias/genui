@@ -2,9 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:a2ui_core/a2ui_core.dart' as core;
+// ignore: deprecated_member_use, see https://github.com/a2ui-project/a2ui/issues/3235
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:genui/a2ui_core.dart' as core;
 import 'package:genui/genui.dart';
 
 import '../../test_infra/message_builders.dart';
@@ -383,4 +384,80 @@ void main() {
     );
     expect(checkboxNumber.value, false); // 123 does not match option1
   });
+
+  testWidgets(
+    'ChoicePicker validation checks show error message when failing',
+    (WidgetTester tester) async {
+      final surfaceController = SurfaceController(
+        catalogs: [BasicCatalogItems.asCatalog()],
+      );
+      addTearDown(surfaceController.dispose);
+      const surfaceId = 'validationTest';
+      surfaceController.handleMessage(
+        updateDataModel(
+          surfaceId: surfaceId,
+          path: DataPath('/selected'),
+          value: '',
+        ),
+      );
+
+      final List<JsonMap> components = [
+        component(
+          id: 'root',
+          type: 'ChoicePicker',
+          properties: {
+            'label': 'Pick one',
+            'variant': 'mutuallyExclusive',
+            'options': [
+              {'label': 'A', 'value': 'a'},
+              {'label': 'B', 'value': 'b'},
+            ],
+            'value': {'path': '/selected'},
+            'checks': [
+              {
+                'message': 'Selection required',
+                'condition': {
+                  'call': 'required',
+                  'args': {
+                    'value': {'path': '/selected'},
+                  },
+                },
+              },
+            ],
+          },
+        ),
+      ];
+
+      surfaceController.handleMessage(
+        updateComponents(surfaceId: surfaceId, components: components),
+      );
+      surfaceController.handleMessage(
+        createSurface(surfaceId: surfaceId, catalogId: basicCatalogId),
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Surface(
+              surfaceContext: surfaceController.contextFor(surfaceId),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Selection required'), findsOneWidget);
+
+      surfaceController.handleMessage(
+        updateDataModel(
+          surfaceId: surfaceId,
+          path: DataPath('/selected'),
+          value: 'a',
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Selection required'), findsNothing);
+    },
+  );
 }

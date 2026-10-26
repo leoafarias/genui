@@ -2,15 +2,16 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+// ignore: deprecated_member_use, see https://github.com/a2ui-project/a2ui/issues/3235
 import 'package:flutter/material.dart';
 import 'package:json_schema_builder/json_schema_builder.dart';
 
 import '../../model/a2ui_schemas.dart';
 import '../../model/catalog_item.dart';
 import '../../model/data_model.dart';
+import '../../model/validation_helper.dart';
 import '../../primitives/simple_items.dart';
 import '../../widgets/widget_utilities.dart';
-import 'widget_helpers.dart';
 
 final _schema = S.object(
   description:
@@ -85,14 +86,14 @@ final choicePicker = CatalogItem(
     final isChips = data.displayStyle == 'chips';
 
     // Wrap the picker in validation
-    return StreamBuilder<bool>(
-      stream: itemContext.dataContext.evaluateConditionStream(
-        checksToExpression(data.checks),
+    return StreamBuilder<String?>(
+      stream: ValidationHelper.validateStream(
+        data.checks,
+        itemContext.dataContext,
       ),
-      initialData: true,
       builder: (context, snapshot) {
-        final bool isValid = snapshot.data ?? true;
-        final bool isError = !isValid;
+        final String? errorMessage = snapshot.data;
+        final isError = errorMessage != null;
 
         return BoundList(
           dataContext: itemContext.dataContext,
@@ -121,7 +122,7 @@ final choicePicker = CatalogItem(
                 Padding(
                   padding: const EdgeInsets.only(left: 16.0, top: 4.0),
                   child: Text(
-                    'Invalid selection',
+                    errorMessage,
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.error,
                       fontSize: 12,

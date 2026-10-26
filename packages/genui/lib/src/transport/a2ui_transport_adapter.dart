@@ -4,8 +4,7 @@
 
 import 'dart:async';
 
-import 'package:a2ui_core/a2ui_core.dart' as core;
-
+import '../a2ui_core/a2ui_core.dart' as core;
 import '../interfaces/transport.dart';
 import '../model/chat_message.dart';
 import '../model/generation_events.dart';
@@ -61,11 +60,14 @@ class A2uiTransportAdapter implements Transport {
   }
 
   /// A stream of sanitizer text for the chat UI.
+  ///
+  /// Chunk whitespace is preserved as emitted, so consumers can concatenate
+  /// chunks without words smashing together across chunk boundaries.
   @override
   Stream<String> get incomingText => _pipeline
       .where((e) => e is TextEvent)
       .cast<TextEvent>()
-      .map((e) => e.text.trim())
+      .map((e) => e.text)
       .where((text) => text.isNotEmpty);
 
   /// A stream of A2UI messages parsed from the input.

@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 import 'package:flutter/foundation.dart';
+// ignore: deprecated_member_use, see https://github.com/a2ui-project/a2ui/issues/3235
 import 'package:flutter/material.dart';
 import 'package:json_schema_builder/json_schema_builder.dart';
 import 'package:video_player/video_player.dart' as vp;
@@ -240,6 +241,7 @@ class _BottomControlBar extends StatelessWidget {
         return Row(
           children: [
             IconButton(
+              tooltip: value.isPlaying ? 'Pause' : 'Play',
               icon: Icon(value.isPlaying ? Icons.pause : Icons.play_arrow),
               onPressed: () {
                 if (value.isPlaying) {
@@ -254,18 +256,23 @@ class _BottomControlBar extends StatelessWidget {
               style: Theme.of(context).textTheme.bodySmall,
             ),
             Expanded(
-              child: Slider(
-                value: duration.inMilliseconds > 0
-                    ? position.inMilliseconds
-                          .clamp(0, duration.inMilliseconds)
-                          .toDouble()
-                    : 0,
-                max: duration.inMilliseconds > 0
-                    ? duration.inMilliseconds.toDouble()
-                    : 1,
-                onChanged: (v) {
-                  controller.seekTo(Duration(milliseconds: v.toInt()));
-                },
+              child: MergeSemantics(
+                child: Semantics(
+                  label: 'Playback position',
+                  child: Slider(
+                    value: duration.inMilliseconds > 0
+                        ? position.inMilliseconds
+                              .clamp(0, duration.inMilliseconds)
+                              .toDouble()
+                        : 0,
+                    max: duration.inMilliseconds > 0
+                        ? duration.inMilliseconds.toDouble()
+                        : 1,
+                    onChanged: (v) {
+                      controller.seekTo(Duration(milliseconds: v.toInt()));
+                    },
+                  ),
+                ),
               ),
             ),
             Text(
@@ -288,7 +295,15 @@ class _BottomControlBar extends StatelessWidget {
                   overlayShape: SliderComponentShape.noOverlay,
                   padding: EdgeInsets.zero,
                 ),
-                child: Slider(value: volume, onChanged: controller.setVolume),
+                child: MergeSemantics(
+                  child: Semantics(
+                    label: 'Volume',
+                    child: Slider(
+                      value: volume,
+                      onChanged: controller.setVolume,
+                    ),
+                  ),
+                ),
               ),
             ),
             const SizedBox(width: 8),

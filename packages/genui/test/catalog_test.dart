@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+// ignore: deprecated_member_use, see https://github.com/a2ui-project/a2ui/issues/3235
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:genui/genui.dart';
@@ -182,6 +183,94 @@ void main() {
         final catalog = Catalog([BasicCatalogItems.text]);
         final Catalog copy = catalog.copyWithout();
         expect(copy.systemPromptFragments, isEmpty);
+      });
+    });
+
+    group('catalog ID aliases', () {
+      test('default to empty', () {
+        const catalog = Catalog([], catalogId: 'test_catalog');
+        expect(catalog.catalogIdAliases, isEmpty);
+      });
+
+      test('matchesId accepts the canonical ID and every alias', () {
+        const catalog = Catalog(
+          [],
+          catalogId: 'canonical',
+          catalogIdAliases: ['legacy', 'older'],
+        );
+
+        expect(catalog.matchesId('canonical'), isTrue);
+        expect(catalog.matchesId('legacy'), isTrue);
+        expect(catalog.matchesId('older'), isTrue);
+      });
+
+      test('matchesId rejects an unrelated ID', () {
+        const catalog = Catalog(
+          [],
+          catalogId: 'canonical',
+          catalogIdAliases: ['legacy'],
+        );
+
+        expect(catalog.matchesId('someone_elses_catalog'), isFalse);
+        expect(catalog.matchesId(''), isFalse);
+      });
+
+      test(
+        'matchesId falls back to effectiveCatalogId for inline catalogs',
+        () {
+          final catalog = Catalog([BasicCatalogItems.text]);
+
+          expect(catalog.matchesId(catalog.effectiveCatalogId), isTrue);
+          expect(catalog.matchesId('inline_catalog_0'), isFalse);
+        },
+      );
+
+      test('copyWith preserves aliases when none are given', () {
+        const catalog = Catalog(
+          [],
+          catalogId: 'canonical',
+          catalogIdAliases: ['legacy'],
+        );
+
+        expect(catalog.copyWith().catalogIdAliases, ['legacy']);
+      });
+
+      test('copyWith replaces aliases when given', () {
+        const catalog = Catalog(
+          [],
+          catalogId: 'canonical',
+          catalogIdAliases: ['legacy'],
+        );
+
+        final Catalog copy = catalog.copyWith(catalogIdAliases: ['other']);
+
+        expect(copy.catalogIdAliases, ['other']);
+        expect(copy.matchesId('legacy'), isFalse);
+        expect(copy.matchesId('other'), isTrue);
+      });
+
+      test('copyWithout preserves aliases when none are given', () {
+        const catalog = Catalog(
+          [],
+          catalogId: 'canonical',
+          catalogIdAliases: ['legacy'],
+        );
+
+        expect(catalog.copyWithout().catalogIdAliases, ['legacy']);
+      });
+
+      test('copyWithout replaces aliases when given', () {
+        const catalog = Catalog(
+          [],
+          catalogId: 'canonical',
+          catalogIdAliases: ['legacy'],
+        );
+
+        final Catalog copy = catalog.copyWithout(catalogIdAliases: []);
+
+        expect(copy.catalogIdAliases, isEmpty);
+        expect(copy.matchesId('legacy'), isFalse);
+        expect(copy.matchesId('canonical'), isTrue);
       });
     });
 

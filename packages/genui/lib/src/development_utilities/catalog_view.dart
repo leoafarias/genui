@@ -5,9 +5,10 @@
 import 'dart:async' show StreamSubscription;
 import 'dart:convert';
 
-import 'package:a2ui_core/a2ui_core.dart' as core;
+// ignore: deprecated_member_use, see https://github.com/a2ui-project/a2ui/issues/3235
 import 'package:flutter/material.dart';
 
+import '../a2ui_core/a2ui_core.dart' as core;
 import '../engine/surface_controller.dart';
 import '../model/catalog.dart';
 import '../model/catalog_item.dart';
