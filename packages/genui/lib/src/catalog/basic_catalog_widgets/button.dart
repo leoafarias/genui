@@ -167,7 +167,7 @@ final button = CatalogItem(
           "id": "primaryButton",
           "component": "Button",
           "child": "primaryText",
-          "primary": true,
+          "variant": "primary",
           "action": {
             "event": {
               "name": "primary_pressed"
