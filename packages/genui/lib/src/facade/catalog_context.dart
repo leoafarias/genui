@@ -117,12 +117,12 @@ abstract final class CatalogContext {
   /// found in [catalog], or a [FormatException] if a loaded item's example
   /// JSON is malformed.
   static JsonMap loadItems(Catalog catalog, Iterable<String> names) {
-    final Map<String, CatalogItem> byName = {
-      for (final item in catalog.items) item.name: item,
-    };
-    final Map<String, CatalogItem> byNameLower = {
-      for (final item in catalog.items) item.name.toLowerCase(): item,
-    };
+    final Map<String, CatalogItem> byName = {};
+    final Map<String, CatalogItem> byNameLower = {};
+    for (final CatalogItem item in catalog.items) {
+      byName.putIfAbsent(item.name, () => item);
+      byNameLower.putIfAbsent(item.name.toLowerCase(), () => item);
+    }
 
     final seen = <String>{};
     final details = <JsonMap>[];

@@ -30,6 +30,25 @@ void main() {
   List<JsonMap> itemsOf(JsonMap payload) =>
       (payload['items']! as List<Object?>).cast<JsonMap>();
 
+  test('incremental lookup preserves the first duplicate implementation', () {
+    final duplicate = CatalogItem(
+      name: 'Fancy',
+      dataSchema: S.object(
+        description: 'Later incompatible implementation.',
+        properties: {'count': S.integer()},
+      ),
+      widgetBuilder: (_) => const SizedBox.shrink(),
+    );
+    final duplicates = Catalog([fancyItem, duplicate]);
+    for (final name in ['Fancy', 'fancy']) {
+      final JsonMap item = itemsOf(
+        CatalogContext.loadItems(duplicates, [name]),
+      ).single;
+      expect(item['schema'], fancyItem.envelopeSchema);
+      expect(item['description'], fancyItem.description);
+    }
+  });
+
   group('CatalogContext.manifest', () {
     test('includes catalog item names and descriptions', () {
       final JsonMap manifest = CatalogContext.manifest(catalog);

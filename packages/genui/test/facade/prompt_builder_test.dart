@@ -125,6 +125,14 @@ void main() {
       expect(prompt, isNot(contains('{"items": ["Card", "Text"]}')));
     });
 
+    test('incremental prompts retain the referenced theme definition', () {
+      final String prompt = incrementalPromptFor(testCatalog);
+      expect(prompt, contains('"theme": {'));
+      expect(prompt, contains('"iconUrl"'));
+      expect(prompt, contains('"agentDisplayName"'));
+      expect(prompt, contains(r'^#[0-9a-fA-F]{6}$'));
+    });
+
     test('includes catalog functions and anyFunction', () {
       final functionsCatalog = Catalog(
         <CatalogItem>[BasicCatalogItems.text],

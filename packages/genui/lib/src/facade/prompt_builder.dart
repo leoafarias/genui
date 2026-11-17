@@ -678,7 +678,10 @@ $encodedManifest
     functionSchemas = _catalogFunctionSchemas(catalog);
     final JsonMap catalogFunctions = {
       'functions': functionSchemas.functions,
-      r'$defs': {'anyFunction': functionSchemas.anyFunction},
+      r'$defs': {
+        'anyFunction': functionSchemas.anyFunction,
+        'theme': (catalog.fullSchema.value[r'$defs']! as Map)['theme'],
+      },
     };
     return const JsonEncoder.withIndent('  ')
         .convert(catalogFunctions)
