@@ -2,10 +2,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'dart:convert';
+
 // ignore: deprecated_member_use, see https://github.com/a2ui-project/a2ui/issues/3235
 import 'package:flutter/material.dart';
 import 'package:json_schema_builder/json_schema_builder.dart';
+import 'package:meta/meta.dart' show internal;
 
+import '../primitives/constants.dart';
+import '../primitives/simple_items.dart';
 import 'data_model.dart';
 import 'ui_models.dart';
 
@@ -151,4 +156,80 @@ final class CatalogItem {
   /// examples, [configure logging](https://github.com/flutter/genui/blob/main/packages/genui/README.md#how-can-i-configure-logging)
   /// to `Level.ALL` and search for the string `"definition": {` in the logs.
   final List<ExampleBuilderCallback> exampleData;
+
+  /// A compact human-readable description derived from [dataSchema], falling
+  /// back to a generic label when the schema has none.
+  @internal
+  String get description {
+    final Object? rawDescription = _originalSchema.value['description'];
+    if (rawDescription is String && rawDescription.trim().isNotEmpty) {
+      return rawDescription.trim();
+    }
+    return 'A2UI component named $name.';
+  }
+
+  /// The full component-envelope JSON schema for use inside
+  /// `updateComponents.components`.
+  ///
+  /// Includes `id` (required), `component` (required), and `accessibility`
+  /// (optional, from `ComponentCommon`), with `$ref`s rewritten to
+  /// `common_types.json`.
+  @internal
+  JsonMap get envelopeSchema {
+    final itemSchema = Map<String, Object?>.from(dataSchema.value);
+
+    final itemProperties = Map<String, Object?>.from(
+      itemSchema['properties'] as Map<String, Object?>? ?? const {},
+    )..remove('id');
+
+    final itemRequired = List<Object?>.from(
+      itemSchema['required'] as List<Object?>? ?? const [],
+    );
+
+    final JsonMap envelope = {
+      ...itemSchema,
+      'additionalProperties': false,
+      'properties': {
+        ...itemProperties,
+        'id': {
+          'type': 'string',
+          'description':
+              'Unique component id. Use "root" for the root component.',
+        },
+        'accessibility': {
+          r'$ref': 'common_types.json#/\$defs/AccessibilityAttributes',
+        },
+      },
+      'required': ['id', ...itemRequired.where((value) => value != 'id')],
+    };
+    return jsonDecode(
+          jsonEncode(
+            envelope,
+          ).replaceAll(commonTypesSchemaId, 'common_types.json'),
+        )
+        as JsonMap;
+  }
+
+  /// The structured JSON representations decoded from [exampleData].
+  ///
+  /// Throws a [FormatException] if any builder in [exampleData] returns invalid
+  /// JSON.
+  @internal
+  List<Object?> get decodedExamples {
+    final examples = <Object?>[];
+    for (var index = 0; index < exampleData.length; index++) {
+      final String json = exampleData[index]();
+      try {
+        examples.add(jsonDecode(json));
+      } on FormatException catch (error) {
+        throw FormatException(
+          'Failed to parse example $index for catalog item "$name": '
+          '${error.message}',
+          error.source,
+          error.offset,
+        );
+      }
+    }
+    return examples;
+  }
 }

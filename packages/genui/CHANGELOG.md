@@ -2,6 +2,13 @@
 
 ## 0.10.6
 
+- **Feature**: Added incremental catalog prompt mode (`CatalogPromptMode.incremental`)
+  and `CatalogContext` (`CatalogContext.manifest`, `CatalogContext.loadItems`,
+  `CatalogContext.executeTool`, and `CatalogContext.loadCatalogItemsTool`) so
+  agents can receive a compact catalog manifest in the system prompt and load
+  component schemas and examples on demand (#949).
+- **Fix**: Updated `Button` catalog example to use `"variant": "primary"` instead
+  of the legacy `"primary": true` property.
 - **Refactoring**: `a2ui_core` is inlined into this package.
 - **BREAKING**: genui no longer depends on `package:a2ui_core`. It runs on its
   own copy of `a2ui_core` 0.1.0, exported as `package:genui/a2ui_core.dart`.
